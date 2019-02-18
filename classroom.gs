@@ -4,10 +4,48 @@
 * https://developers.google.com/classroom/reference/rest/v1/courses/list#try-it
 * fields: nextPageToken,courses(name,id,ownerId)
 */
-function listCourses() {
+
+function getTeachersFromClassroom() {
+  // get list of courses from Reportbooks sheet
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  var courseIds = sheet.getRange(top.COLUMNS.COURSEIDS).getValues();
+  if (courseIds[0][0] != "courseId") {
+    throw "Column D in Reportbooks sheet does not start with 'courseId' - CHECK & FIX IMMEDIATELY";
+  }
+  
+  // get teachers for each course
+  
+  
+  // add missing teachers to the Teachers sheet
+  
+}
+
+function getStudentsFromClassroom() {
+  
+}
+
+function createRBs() {
+  var courses = getCoursesFromClassroom();
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  var startRow = 2;
+  
+  for (var c = 0; c < courses.length; c++) {
+    var course = courses[c];
+    Logger.log(course);
+    var row = startRow + c;
+    sheet.getRange(row, 2).setValue(course.name);
+    sheet.getRange(row, 4).setValue(course.id);
+    sheet.getRange(row, 5).setValue(course.ownerId);
+  }
+}
+
+function getCoursesFromClassroom() {
   var courses = [];
   var optionalArgs = {
     pageSize: 10,
+    teacherId: "john.kershaw@hope.edu.kh",
     fields: "courses.name,courses.id,courses.ownerId",
     pageToken: ""
   };

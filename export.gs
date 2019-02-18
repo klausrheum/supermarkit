@@ -679,10 +679,10 @@ function backupAllPastoralAdmin() {
 
 function backupPastoralAdmin(student) {
   var fields = [
-    [top.CELLS.ADMINPASTORALTEACHER, top.COLS.PASTORALTEACHERBACKUP],
-    [top.CELLS.ADMINEXTRACURRICULAR, top.COLS.EXTRACURRICULARBACKUP],
-    [top.CELLS.ADMINATTENDANCETOTAL, top.COLS.ATTENDANCETOTALBACKUP],
-    [top.CELLS.ADMINPASTORALCOMMENT, top.COLS.PASTORALCOMMENTBACKUP]
+    [top.RANGES.ADMINPASTORALTEACHER, top.COLS.PASTORALTEACHERBACKUP],
+    [top.RANGES.ADMINEXTRACURRICULAR, top.COLS.EXTRACURRICULARBACKUP],
+    [top.RANGES.ADMINATTENDANCETOTAL, top.COLS.ATTENDANCETOTALBACKUP],
+    [top.RANGES.ADMINPASTORALCOMMENT, top.COLS.PASTORALCOMMENTBACKUP]
   ];
   
   console.warn('Backing up Pastoral Admin data for %s', student.fullname);
@@ -710,7 +710,7 @@ function backupPastoralAdmin(student) {
   // copy, compress & save ATTRIBUTES
   var values = pf
   .getSheetByName(top.SHEETS.ADMIN)
-  .getRange(top.CELLS.ADMINATTRIBUTES)
+  .getRange(top.RANGES.ADMINATTRIBUTES)
   .getValues();
   
   var compressedValue = [];

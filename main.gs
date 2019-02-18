@@ -40,22 +40,30 @@ var top = {
   },
   
   SHEETS: {
+    // names of sheets
     TITLESROW : 3,
     
+    // Sheets in Reportbooks Tracker
     REPORTBOOKS: "Reportbooks",
     PORTFOLIOS: "Portfolios",
     PROBLEMLOG: "ProblemLog",
     
+    // Sheets in Subject Reportbooks
     OVERVIEW: "Overview",
     GRADES: "Grades",
     INDREP: "Individual report", // NB small 'r'
     
+    // Sheets in Student Portfolio
     ADMIN: "Admin",
     PASTORAL: "Pastoral",
     SUB: "Sub"
   },
   
   COLS: {
+    // Columns in Reportbooks sheet
+    IDSTOEXPORT: 12,
+    
+    // Columns in Portfolios Sheet
     LASTNAME: 1,
     FIRSTNAME: 2,
     EMAIL: 3,
@@ -67,9 +75,9 @@ var top = {
     TABS: 9,
     GUARDIANEMAIL: 19,
     
-    IDSTOEXPORT: 12,
-    OVERVIEWSUBJECT: 10,
-    OVERVIEWTEACHER: 11,
+    // @KR unused?
+    // OVERVIEWSUBJECT: 10,
+    // OVERVIEWTEACHER: 11,
     
     EMAILSTOEXPORT: 9,
 
@@ -84,10 +92,15 @@ var top = {
 
   },
   
-  CELLS: {
-    OVERVIEWSUBJECT:      "B1",
-    OVERVIEWTEACHER:      "B2",
+  RANGES: {
+    // Reportbooks
+    COURSEIDS: "D:D",
     
+    // @KR unused? Reportbook: Individual Report?
+    // OVERVIEWSUBJECT:      "B1",
+    // OVERVIEWTEACHER:      "B2",
+    
+    // Pastoral
     ADMINPASTORALTEACHER: "B3",
     ADMINEXTRACURRICULAR: "B9",
     ADMINATTENDANCETOTAL: "B10",
@@ -96,7 +109,9 @@ var top = {
   }
 };
 
+// change this with each new semester (or pick from a list?)
 top.FILES.RBTRACKER = top.FILES.rbJun2019;
+
 top.students = initialiseStudents();
 
 
