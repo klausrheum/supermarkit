@@ -47,6 +47,7 @@ var top = {
     REPORTBOOKS: "Reportbooks",
     PORTFOLIOS: "Portfolios",
     PROBLEMLOG: "ProblemLog",
+    TEACHERS: "Teachers",
     
     // Sheets in Subject Reportbooks
     OVERVIEW: "Overview",
@@ -95,7 +96,8 @@ var top = {
   RANGES: {
     // Reportbooks
     COURSEIDS: "D:D",
-    
+    TEACHERIDS: "A:A",
+    TEACHERINFO: "A:C",
     // @KR unused? Reportbook: Individual Report?
     // OVERVIEWSUBJECT:      "B1",
     // OVERVIEWTEACHER:      "B2",

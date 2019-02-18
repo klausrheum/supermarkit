@@ -5,35 +5,84 @@
 * fields: nextPageToken,courses(name,id,ownerId)
 */
 
-function getTeachersFromClassroom() {
-  // get list of courses from Reportbooks sheet
+function getTeachersFromTracker() {
+  // https://developers.google.com/classroom/reference/rest/v1/courses.teachers/list?apix_params=%7B%22courseId%22%3A%2216063195662%22%2C%22fields%22%3A%22teachers(userId%2Cprofile.name.fullName%2Cprofile.emailAddress)%22%7D
+  // teachers(userId,profile.name.fullName,profile.emailAddress)
+
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
-  var courseIds = sheet.getRange(top.COLUMNS.COURSEIDS).getValues();
+  
+  // get current list of teacher ids
+  var tSheet = rb.getSheetByName(top.SHEETS.TEACHERS);
+  var existingTeachers = tSheet.getRange(top.RANGES.TEACHERIDS).getValues();
+  //Logger.log("existingTeachers: %s", existingTeachers);
+  
+  // build an array of teacherIds for fast indexOf checks
+//  var teacherIds = [];
+//  for (var t = 1; t < existingTeachers.length; t++) {
+//    var teacherId = existingTeachers[t][0];
+//    if (teacherId != "" && teacherIds.indexOf(teacherId) == -1) {
+//      //Logger.log(teacherId);
+//      teacherIds.push(teacherId);
+//    }
+//  }
+  //Logger.log(teacherIds);
+
+  // get list of courses from Reportbooks sheet
+  var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  var courseIds = rbSheet.getRange(top.RANGES.COURSEIDS).getValues();
   if (courseIds[0][0] != "courseId") {
     throw "Column D in Reportbooks sheet does not start with 'courseId' - CHECK & FIX IMMEDIATELY";
   }
   
-  // get teachers for each course
+  // get teachers from each rb course
+  var teacherIds = [];
+
+  var newTeachers = [["id", "fullName", "email"]]; // header row
+  for (var c = 1; c < courseIds.length; c++) { // skip header row
+    var courseId = courseIds[c][0];
+    // Logger.log(courseId);
+    if (courseId == "") break;
+    
+    // teachers: {userId, fullName, email}
+    var teachers = getTeachersFromCourse(courseId);
+    
+    // Logger.log("courseId: %s, teachers: %s", courseId, teachers);
+    for (var t = 0; t < teachers.length; t++) {
+      if (teacherIds.indexOf(teachers[t].userId) == -1) {
+        // add this teacher to newTeachers;
+        newTeachers.push([teachers[t].userId, teachers[t].fullName, teachers[t].email]);
+        teacherIds.push(teachers[t].userId);
+      }
+    }
+  }
   
-  
-  // add missing teachers to the Teachers sheet
-  
+  // update Teachers sheet
+  //Logger.log(newTeachers);
+  tSheet.getDataRange().setValue("");
+  tSheet.getRange(1, 1, newTeachers.length, newTeachers[0].length).setValues(newTeachers);
 }
 
 function getStudentsFromClassroom() {
   
 }
 
-function createRBs() {
-  var courses = getCoursesFromClassroom();
+function TEST_createRBs() {
+  createRBs("john.kershaw@hope.edu.kh");
+}
+
+
+function createRBs(teacherId) {
+  if (teacherId == undefined) {
+    teacherId = "";
+  }
+  var courses = getCoursesFromClassroom(teacherId);
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
   var startRow = 2;
   
   for (var c = 0; c < courses.length; c++) {
     var course = courses[c];
-    Logger.log(course);
+    //Logger.log(course);
     var row = startRow + c;
     sheet.getRange(row, 2).setValue(course.name);
     sheet.getRange(row, 4).setValue(course.id);
@@ -41,15 +90,54 @@ function createRBs() {
   }
 }
 
-function getCoursesFromClassroom() {
+function TEST_getTeachersFromCourse() {
+  getTeachersFromCourse("16063195662");
+}
+
+function getTeachersFromCourse(courseId) {
+  // Expects: courseId, eg 16063195662
+  // Returns: teachers [{userId, fullName, email}, ...]
+  
+  if (courseId == undefined) {
+    throw "getTeachersFromCourse called with no courseId";
+  }
+  var teachers = [];
+  var optionalArgs = {
+    pageSize: 10,
+    fields: "teachers(userId,profile.name.fullName,profile.emailAddress)",
+    pageToken: ""
+  };
+  var response = Classroom.Courses.Teachers.list(courseId, optionalArgs);
+  var rTeachers = response.teachers;
+  
+  var nextPageToken = response.nextPageToken;
+  if (rTeachers && rTeachers.length > 0) {
+    for (i = 0; i < rTeachers.length; i++) {
+      var teacher = {
+        "userId": rTeachers[i].userId,
+        "fullName": rTeachers[i].profile.name.fullName,
+        "email": rTeachers[i].profile.emailAddress
+      };
+      // Logger.log(teacher);
+      teachers.push(teacher);
+    }
+  } else {
+    Logger.log('No teacher found.');
+  }
+  console.log(teacher);
+  return teachers;
+}
+
+function getCoursesFromClassroom(teacherId) {
   var courses = [];
   var optionalArgs = {
     pageSize: 10,
-    teacherId: "john.kershaw@hope.edu.kh",
+    teacherId: teacherId,
     fields: "courses.name,courses.id,courses.ownerId",
     pageToken: ""
   };
-  var response = Classroom.Courses.list(optionalArgs);
+  
+  var response = Classroom.Courses.Teachers.list(optionalArgs);
   var rCourses = response.courses;
   var nextPageToken = response.nextPageToken;
   if (rCourses && rCourses.length > 0) {
@@ -60,7 +148,7 @@ function getCoursesFromClassroom() {
         courses.push(course);
       }
       //Logger.log('%s %s', i, course);
-      Logger.log('%s %s (%s)', i, course.name, course.id);
+      // Logger.log('%s %s (%s)', i, course.name, course.id);
       //}
     }
   } else {
