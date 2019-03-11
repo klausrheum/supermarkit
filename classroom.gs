@@ -17,14 +17,14 @@ function getTeachersFromTracker() {
   //Logger.log("existingTeachers: %s", existingTeachers);
   
   // build an array of teacherIds for fast indexOf checks
-//  var teacherIds = [];
-//  for (var t = 1; t < existingTeachers.length; t++) {
-//    var teacherId = existingTeachers[t][0];
-//    if (teacherId != "" && teacherIds.indexOf(teacherId) == -1) {
-//      //Logger.log(teacherId);
-//      teacherIds.push(teacherId);
-//    }
-//  }
+  // var teacherIds = [];
+  // for (var t = 1; t < existingTeachers.length; t++) {
+  //    var teacherId = existingTeachers[t][0];
+  //    if (teacherId != "" && teacherIds.indexOf(teacherId) == -1) {
+  //      //Logger.log(teacherId);
+  //      teacherIds.push(teacherId);
+  //    }
+  //  }
   //Logger.log(teacherIds);
 
   // get list of courses from Reportbooks sheet
@@ -103,7 +103,7 @@ function getTeachersFromCourse(courseId) {
   }
   var teachers = [];
   var optionalArgs = {
-    pageSize: 10,
+    pageSize: 50,
     fields: "teachers(userId,profile.name.fullName,profile.emailAddress)",
     pageToken: ""
   };
@@ -129,33 +129,56 @@ function getTeachersFromCourse(courseId) {
 }
 
 function getCoursesFromClassroom(teacherId) {
+  // teacherId can be ""
+  // TODO Use nextPageToken as pageToken to pull next page (!)
+  var iterations = 0;
   var courses = [];
+  var misnamedCourses = [];
+  
   var optionalArgs = {
-    pageSize: 10,
+    pageSize: 50,
     teacherId: teacherId,
-    fields: "courses.name,courses.id,courses.ownerId",
+    fields: "nextPageToken,courses.name,courses.id,courses.ownerId",
     pageToken: ""
   };
   
-  var response = Classroom.Courses.Teachers.list(optionalArgs);
-  var rCourses = response.courses;
-  var nextPageToken = response.nextPageToken;
-  if (rCourses && rCourses.length > 0) {
-    for (i = 0; i < rCourses.length; i++) {
-      var course = rCourses[i];
-      // Logger.log('%s', course.name.slice(0,3));
-      if (course.name.slice(0,3) == "Y20") {
-        courses.push(course);
+  var finished = false;
+  while (! finished && iterations < 200) { // 4000 courses is more than we have!
+    iterations ++;
+    var response = Classroom.Courses.list(optionalArgs);
+    var rCourses = response.courses;
+    
+    if (rCourses && rCourses.length > 0) {
+      for (i = 0; i < rCourses.length; i++) {
+        
+        var course = rCourses[i];
+        // Logger.log('%s', course.name.slice(0,3));
+        if (course.name.slice(0,3) == "Y20") {
+          courses.push(course);
+          console.log("Adding course: " + course);
+        } else {
+          console.log("Invalid course name: %s", course.name); 
+          misnamedCourses.push(course);
+        }
+        console.log("Now I have %s good courses and %s misnamed courses", courses.length, misnamedCourses.length);
+
+        
+        //Logger.log('%s %s', i, course);
+        // Logger.log('%s %s (%s)', i, course.name, course.id);
+        //}
       }
-      //Logger.log('%s %s', i, course);
-      // Logger.log('%s %s (%s)', i, course.name, course.id);
-      //}
     }
-  } else {
-    Logger.log('No courses found.');
+    var nextPageToken = response.nextPageToken;
+    console.log (nextPageToken);
+    if (nextPageToken == undefined) {
+      finished = true;
+    } else {
+      optionalArgs.pageToken = nextPageToken; 
+    }
+    console.info("After the %s request I have %s good courses and %s misnamed courses", iterations, courses.length, misnamedCourses.length);
   }
-  console.log(courses);
-  return courses;
+  console.log(courses.length, misnamedCourses.length);
+  return [courses, misnamedCourses];
 }
 
 /*
