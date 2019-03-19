@@ -196,15 +196,15 @@ function getStudentByEmail(studentEmail) {
   return getStudent(student);
 }
 
-function createStudentRBs() {
-  var meta = {'tag': arguments.callee.name, "dest": "L"};
-  
-  for (var s in top.students) {
-    student = top.students[s];
-    student.fileid = getStudent(student).fileid;
-  }
-}
-// END createStudentRBs
+//function createStudentRBs() {
+//  var meta = {'tag': arguments.callee.name, "dest": "L"};
+//  
+//  for (var s in top.students) {
+//    student = top.students[s];
+//    student.fileid = getStudent(student).fileid;
+//  }
+//}
+//// END createStudentRBs
 
 function getStudents() {
   // students is now global for speed (!) 

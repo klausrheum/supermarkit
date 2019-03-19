@@ -5,7 +5,44 @@
 * fields: nextPageToken,courses(name,id,ownerId)
 */
 
+/**
+ * Explanation of function
+ * @param {string} text The text you want logged
+ * @return {number} the length of the debug string
+ */
+function debug(text) {
+  var logText = "debug: " + text;
+  Logger.log(logText);
+  return logText.length;
+}
+
+function flush() {
+  SpreadsheetApp.flush();
+}
+
+
+/**
+ * @param {string} arg
+ * @return {number}
+ */
+function createRBTrackers() {
+  
+}
+
+/**
+ * Explanation of function
+ * @param {string} arg
+ * @return {number}
+ */
+function createRBTracker() {
+  
+}
+
+/**
+ * Updates the 'Teachers' tab in the 'Reportbooks Tracker' SS
+ */
 function getTeachersFromTracker() {
+ 
   // https://developers.google.com/classroom/reference/rest/v1/courses.teachers/list?apix_params=%7B%22courseId%22%3A%2216063195662%22%2C%22fields%22%3A%22teachers(userId%2Cprofile.name.fullName%2Cprofile.emailAddress)%22%7D
   // teachers(userId,profile.name.fullName,profile.emailAddress)
 
@@ -42,6 +79,7 @@ function getTeachersFromTracker() {
     var courseId = courseIds[c][0];
     // Logger.log(courseId);
     if (courseId == "") break;
+    if (Number.isNaN(courseId)) continue;
     
     // teachers: {userId, fullName, email}
     var teachers = getTeachersFromCourse(courseId);
@@ -67,26 +105,93 @@ function getStudentsFromClassroom() {
 }
 
 function TEST_createRBs() {
-  createRBs("john.kershaw@hope.edu.kh");
+  importClassrooms("john.kershaw@hope.edu.kh");
 }
 
 
-function createRBs(teacherId) {
+
+function importClassrooms(teacherId) {
   if (teacherId == undefined) {
     teacherId = "";
   }
-  var courses = getCoursesFromClassroom(teacherId);
+  
+  var coursesData = getCoursesFromClassroom(teacherId);
+  var goodCourses = coursesData[0];
+  goodCourses.sort();
+  var badCourses = coursesData[1];
+  badCourses.sort();
+  Logger.log("good: %s, bad: %s", goodCourses.length, badCourses.length);
+  
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
-  var startRow = 2;
   
-  for (var c = 0; c < courses.length; c++) {
-    var course = courses[c];
+  //sheet = rb.getSheetByName("Copy of Reportbooks");
+    
+  var c, row, course;
+  var goodRowsStart, goodRowsEnd;
+  var badRowsStart, badRowsEnd;
+  
+  var startRow = 2;
+  goodRowsStart = startRow;
+  
+  // good courses
+  for (c = 0; c < goodCourses.length; c++) {
+    course = goodCourses[c];
     //Logger.log(course);
-    var row = startRow + c;
+    row = startRow + c;
     sheet.getRange(row, 2).setValue(course.name);
+    sheet.getRange(row, 3).setValue(course.alternateLink);
     sheet.getRange(row, 4).setValue(course.id);
     sheet.getRange(row, 5).setValue(course.ownerId);
+  }
+  goodRowsEnd = row;
+  
+  sheet.getRange(goodRowsStart, 2, goodRowsEnd, 6)
+  .setFontWeight("normal")
+  .setFontColor("black");
+  
+  sheet.getRange(goodRowsEnd + 1, 2, 5, 4).setValue("");
+  
+  sheet.getRange(row + 3, 2)
+  .setValue("Old/bad/dead courses (not in reports)")
+  .setFontWeight("bold")
+  .setFontColor("#999999");
+  
+  // bad courses
+  startRow = row + 4;
+  badRowsStart = startRow;
+  
+  for (c = 0; c < badCourses.length; c++) {
+    course = badCourses[c];
+    //Logger.log(course);
+    row = startRow + c;
+    sheet.getRange(row, 2).setValue(course.name);
+    sheet.getRange(row, 3).setValue(course.alternateLink);
+    sheet.getRange(row, 4).setValue(course.id);
+    sheet.getRange(row, 5).setValue(course.ownerId);
+  }
+
+  badRowsEnd = row;
+  
+  sheet.getRange(badRowsEnd+1, 2, 20, 4).setValue("");
+  
+  sheet.getRange(badRowsStart, 2, badRowsEnd, 6)
+  .setFontWeight("normal")
+  .setFontColor("#999999");
+  
+  var rows = [[goodRowsStart, goodRowsEnd],
+                 [badRowsStart, badRowsEnd]];
+  var START = 0, END = 1;
+  
+  SpreadsheetApp.flush();
+  
+  // sort rows
+  for (var goodBad = 0; goodBad < rows.length; goodBad ++) {
+  sheet.getRange(rows[goodBad][START], 2, rows[goodBad][END], 5)
+  .sort(
+    [{column: 6, ascending: true}, // teacher name, alpha 
+     {column: 2, ascending: true}  // courseName
+    ]);
   }
 }
 
@@ -139,7 +244,7 @@ function getCoursesFromClassroom(teacherId) {
   var optionalArgs = {
     pageSize: 50,
     teacherId: teacherId,
-    fields: "nextPageToken,courses.name,courses.id,courses.ownerId",
+    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId",
     pageToken: ""
   };
   

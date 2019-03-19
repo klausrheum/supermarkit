@@ -73,6 +73,24 @@ function listFolderIntoSheet(foldername) {
 
 
 
+// sort by columns
+function Comparator(arrayA, arrayB) {
+  var sort1 = 3;
+  var sort2 = 1;
+  
+  if (arrayA[sort1] < arrayB[sort1]) return -1;
+  if (arrayA[sort1] > arrayB[sort1]) return 1;
+  
+  // sort1 = same
+  if (arrayA[sort2] < arrayB[sort2]) return -1;
+  if (arrayA[sort2] > arrayB[sort2]) return 1;
+  
+  // both columns match (same same)
+  return 0;
+}
+
+
+
 // copy & paste columns A-D from 'list Reportbooks' to 'Reportbooks Tracker'
 function copyReportbooksDataToTracker() {
   var src_id = "1EAW-XHHtA1gIFoXe3sruqTHXtKi07xBxP4oXbWObCgU";
@@ -453,24 +471,6 @@ function listFolders() {
     Logger.log(folder.getName());
   }
 }
-
-// sort by columns
-function Comparator(arrayA, arrayB) {
-  var sort1 = 3;
-  var sort2 = 1;
-  
-  if (arrayA[sort1] < arrayB[sort1]) return -1;
-  if (arrayA[sort1] > arrayB[sort1]) return 1;
-  
-  // sort1 = same
-  if (arrayA[sort2] < arrayB[sort2]) return -1;
-  if (arrayA[sort2] > arrayB[sort2]) return 1;
-  
-  // both columns match (same same)
-  return 0;
-}
-
-
 
 
 
