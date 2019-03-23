@@ -1,3 +1,5 @@
+var TESTING = false; // true
+
 // main.gs ===================================================
 // holds global objects for various doc IDs, eventually these 
 // will be part of the spreadsheet this is attached to...
@@ -25,9 +27,9 @@
 var top = {
   "students": [],
   
-  //"rbTemplatesId": "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys",
-  //"SUBY00TemplateId": "17ZJgVhi_SQeoJffFmjdcOFsMp0FRiZVIkjulnmQXJBw",
-  //"aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
+  // DELETE "rbTemplatesId": "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys",
+  // DELETE "SUBY00TemplateId": "17ZJgVhi_SQeoJffFmjdcOFsMp0FRiZVIkjulnmQXJBw",
+  // DELETE "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
   FILES: {
     // reportbook trackers in semester order: rb(Dec|Jun)\d{4}
@@ -106,9 +108,11 @@ var top = {
     COURSEIDS: "D:D",
     TEACHERIDS: "A:A",
     TEACHERINFO: "A:C",
-    // @KR unused? Reportbook: Individual Report?
-    // OVERVIEWSUBJECT:      "B1",
-    // OVERVIEWTEACHER:      "B2",
+    
+    // Reportbook: Overview tab
+    OVERVIEWSUBJECT:      "B1",
+    OVERVIEWTEACHER:      "B2",
+    OVERVIEWGRADETITLE:   "B5:I5",
     
     // Pastoral
     ADMINPASTORALTEACHER: "B3",
@@ -124,8 +128,11 @@ top.FILES.RBTRACKER = top.FILES.rbJun2019;
 
 top.students = initialiseStudents();
 
+if (TESTING) {
+  sheet = top.SHEETS.REPORTBOOKS = "Copy of Reportbooks";
+}
+  
 
-var testing = false; // true
 var folderRB = "1SxM_NQ8ZsDzZPaZAhfdTXl7e21eFJBkk";
 var listRBs = "1EAW-XHHtA1gIFoXe3sruqTHXtKi07xBxP4oXbWObCgU";
 

@@ -462,16 +462,68 @@ function sharedWithMe(s) {
   return matches;
 }
 
+function TEST_listFolderIds() {
+  var rbFolder = "1SsaWNoBpdX0y5yyJtETU1xEzkpYfX18l";
+  Logger.log(listFolderIds(rbFolder));
+}
+
+function TEST_listFolderNames() {
+  var rbFolder = "1SsaWNoBpdX0y5yyJtETU1xEzkpYfX18l";
+  Logger.log(listFolderNames(rbFolder));
+}
+
+function TEST_listFolderNamesMyDrive() {
+  // no folderId should list files in My Drive
+  Logger.log(listFolderNames());
+}
+
+function listFolderIds(folderId) {
+  return listFolderIdsAndNames(folderId)["ids"];
+}
+
+function listFolderNames(folderId) {
+  return listFolderIdsAndNames(folderId)["names"];
+}
 
 // Log the name of every folder in the user's Drive.
-function listFolders() {
-  var folders = DriveApp.getFolders();
+function listFolderIdsAndNames(folderId) {
+  var folderIds = [];
+  var folderNames = [];
+  
+  var folders;
+  if (! folderId) {
+    folders = DriveApp.getFolders();
+  } else {
+    folders = DriveApp.getFolderById(folderId).getFolders();
+  }
+  
   while (folders.hasNext()) {
     var folder = folders.next();
-    Logger.log(folder.getName());
+    folderIds.push(folder.getId());
+    var folderName = folder.getName();
+    //Logger.log(folderName);
+    folderNames.push(folderName);
+  }
+  return {"ids": folderIds, "names": folderNames};
+}
+
+function copyFolder(srcFolderId, dstFolderId) {
+  var srcFolder = DriveApp.getFolderById(srcFolderId);
+  var dstFolder = DriveApp.getFolderById(dstFolderId);
+  var files = srcFolder.getFiles();
+  while (files.hasNext()) {
+    var file = files.next();
+    var f = file.makeCopy(dstFolder);
+    if (file.getMimeType() == MimeType.GOOGLE_APPS_SCRIPT) {
+      Drive.Files.update({"parents": [{"id": dstFolderId}]}, f.getId());
+    }
   }
 }
 
-
+function run() {
+  var srcFolderId = "### folder ID with source files ###";
+  var dstFolderId = "### destination folder ID ###";
+  copyFolder(srcFolderId, dstFolderId);
+}
 
 

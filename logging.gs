@@ -1,3 +1,25 @@
+function TEST_sendTheDeveloperTheError() {
+  sendTheDeveloperTheError("This is a test"); 
+}
+
+function sendTheDeveloperTheError(message){
+  var to = "classroom@hope.edu.kh";
+  var subject = "SuperMarkIt Server Error";
+  // GmailApp.sendEmail(to, subject, message);
+  logToDoc(message);
+}
+
+function logToDoc(message) {
+  var logFolderName = "SuperMarkIt Receipts";
+  var logFileId = "1oKLTpAHp8xxMFEDwkNcCbQQfLn_zCthbQPc5JhNWR2o";
+  var logFile = DocumentApp.openById(logFileId);
+  var body = logFile.getBody();
+  body.appendHorizontalRule();
+  body.appendParagraph(new Date());
+  body.appendParagraph(message);
+  body.appendHorizontalRule();
+}
+
 function logIt(msg, meta, dest_override) {
   var redirectAll = ""; // or "" 
   

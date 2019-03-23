@@ -1,4 +1,16 @@
 /**
+* 0. Check main.gs / TESTING = false
+* 
+* 1. Run updateReportbookClassrooms to pull data from Classroom into Reportbooks tab
+*
+* 2. Run createMissingReportbooks()
+*
+*/
+
+
+
+
+/**
 * Lists all course names and ids
 *
 * https://developers.google.com/classroom/reference/rest/v1/courses/list#try-it
@@ -22,19 +34,220 @@ function flush() {
 
 
 /**
- * @param {string} arg
- * @return {number}
+ * Create RB docs for classrooms with empty rbID fields (Reportbooks tab) 
+ * @param {string} rbTrackerId
+ * @return {array} list of created rbIds
  */
-function createRBTrackers() {
+function createMissingReportbooks() {
+  // get list of classrooms from rbTracker
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  
+  var rbData = getRows(rbSheet);
+  
+  var errors = [];
+  var rbFolderId = "1ixgKE3RJ_XRR_9Fu2mMsLNuz-wj-VpbT";
+  for (var r = 0; r < rbData.length; r++) {
+    
+    // ESCAPE ROUTE - only do the first two rows
+    // if (r >= 2) break;
+    
+    if (rbData[r]["valid"]) {
+      var rbTitle     = rbData[r]["Reportbook Title"];
+      var rbId        = rbData[r]["rbId"];
+      var email       = rbData[r]["ownerEmail"]
+      var teacherName = rbData[r]["ownerName"];
+      var subjectName = rbData[r]["Subject Name in Report"];
+      
+      // look for missing rbIds
+      if (! rbData[r]["rbId"]) {
+        var courseName = rbData[r]["courseName"];
+        console.log("Missing rbId for " + courseName);
+            
+        // if not found: create doc
+        if (! fileExists(rbTitle, rbFolderId) ) {
+          rbId = copyFile(top.FILES.SUBY00, rbFolderId, reportbookTitle);
+        }    
+      }
+      
+      // TODO: move this into 'if not found: create doc'
+      if (rbId && rbId.length > 10) {
+        rbData[r]["rbId"] = rbId;
+        
+        // update tracker row with rbId
+        rbSheet.getRange(r + 2, 1).setValue(rbId);
+        addEditor(rbId, email);
+        updateReportbookMetadata(rbId, subjectName, teacherName);
+        
+        var classroomPermission = havePermission(rbData[r]["teacherFolder"]);
+        if (classroomPermission) {
+          var alreadyLinked = fileExists(rbTitle, rbData[r]["teacherFolder"] );
+          if ( ! alreadyLinked ) {
+            linkFile(rbId, rbData[r]["teacherFolder"]);
+          }
+        } else {
+          console.error("Permission denied for " + rbTitle);
+        }
+      }
+      // END TODO
+      
+    }
+  }
+  
+  
+  return rbData;
+}
+
+function TEST_addEditor() {
+  // Y2021 Math JKw
+  var fileId = "1qLPF0bb78lCvP5Tf-cS9NaoVhWLYv70-NzwANrZOO6w";
+  var email = "john.kershaw@hope.edu.kh";
+  addEditor(fileId, email);
+}
+
+// Log the name of every file in the user's Drive.
+function addEditor(fileId, email) {
+   DriveApp.getFileById(fileId).addEditor(email);
+}
+
+function TEST_updateReportbookMetadata() {
+  var rbFileId = "1qLPF0bb78lCvP5Tf-cS9NaoVhWLYv70-NzwANrZOO6w"; // Y10 Maths JKw
+  var subjectName = "Math";
+  var teacherName = "John Kershaw";
+  updateReportbookMetadata(rbFileId, subjectName, teacherName);
+}
+
+function updateReportbookMetadata(rbFileId, subjectName, teacherName) {
+  var ss = SpreadsheetApp.openById(rbFileId);
+  Logger.log ("Updating OVERVIEW metadata for " + ss.getName() );
+  var sheet = ss.getSheetByName(top.SHEETS.OVERVIEW);
+  var gradesText = "GRADING SYSTEM (or replace column B with your own)";
+  Logger.log(sheet.getRange(top.RANGES.OVERVIEWSUBJECT).setValue(subjectName) );
+  sheet.getRange(top.RANGES.OVERVIEWTEACHER).setValue(teacherName);
+  sheet.getRange(top.RANGES.OVERVIEWGRADETITLE).setValue(gradesText).mergeAcross();
+  Logger.log("Updated reportbook metadata: ");
+}
+
+function copyFile (fileId, folderId, newName) {
+  console.log("copyFile(" + fileId + ", " + folderId + ", " + newName + ")");
+  var folder = DriveApp.getFolderById(folderId);
+  var subId = DriveApp.getFileById(fileId);
+
+  var rb = subId.makeCopy(newName, folder);
+  if (rb) {
+    console.log("Copied " + subId.getName() + " into folder " + folder.getName() + " as " + newName);
+  } else {
+    console.error("FAILED: link " + file.getName() + " into folder " + folder.getName() + " as " + newName);
+  } 
+  return rb.getId();
+}
+
+function TEST_linkFile() {
+  // Y2022 IGCSE CS JKw Jun2019 Reportbook
+  var fileId = "1foZ6ZvDjp0sAX3aW33lzfQRjLnCW-h8_svyB60jN5pI";
+  var folderId = "0ByUSUXY3mRrIfjNpREozM3RWdmtRemNXaVVmcGVDZzR4dTk4VVJDVERrRDNUaG0wRDFTUTA";
+  linkFile(fileId, folderId);
+}
+
+function linkFile(fileId, folderId) {
+  // link means to add another parent to an existing file
+  console.log("linkFile(" + fileId + ", " + folderId + ")" );
+  var folder = DriveApp.getFolderById(folderId);  
+  var file = DriveApp.getFileById(fileId);
+  var linkedFolder = folder.addFile(file);
+  if (linkedFolder) {
+    console.log("Linked " + file.getName() + " into folder " + folder.getName());
+  } else {
+    console.error("FAILED: link " + file.getName() + " into folder " + folder.getName());
+  } 
+    return linkedFolder.getName();
+}
+
+function TEST_fileExists() {
+  var fileName = "Y2022 IGCSE CS JKw Jun2019 Reportbook";
+  var folderId = "0ByUSUXY3mRrIfjNpREozM3RWdmtRemNXaVVmcGVDZzR4dTk4VVJDVERrRDNUaG0wRDFTUTA";
+  Logger.log(fileExists( fileName, folderId) );
+
+  var fileName = "fishy wishy";
+  Logger.log(fileExists( fileName, folderId) );
+}
+
+
+function TEST_havePermission() {
+  var folderId = "0ByUSUXY3mRrIfjNpREozM3RWdmtRemNXaVVmcGVDZzR4dTk4VVJDVERrRDNUaG0wRDFTUTA";
+  Logger.log (havePermission(folderId));
+  
+  // circuit scramble
+  var folderId = "15vEo8P3G-bBXemg7CsTpCLzZR1c7p7t4";
+  Logger.log (havePermission(folderId));
+}
+
+function havePermission(folderId) {
+  // do we have permissions to look in the folder?
+  var errors = [];
+  
+  try {
+    var folder = DriveApp.getFolderById(folderId);
+    return folder;
+  } catch(e) { 
+    errors.push("Permission denied for folder " + folderId);
+    console.error(errors[errors.length - 1]);
+    return false;
+  }
+}
+
+function fileExists(fileName, folderId) {
+  var folder = havePermission(folderId);
+  var errors = [];
+  
+  if (folder) {
+  var folderName = folder.getName();
+    try {
+      var filesList = folder.getFilesByName(fileName);
+      if (filesList.hasNext()) {
+        file = filesList.next();
+        Logger.log('File exists: ' + file.getName() + " in folder " + folderName );
+      } else {
+        errors.push('File: ' + fileName + " not found in folder " + folderName);
+        console.error( errors[errors.length - 1] );
+      } 
+    } catch(e) { 
+      errorText = "File not found: " + folder + "/" + fileName + "\n" + e.message + "\n\n";
+      console.error(errorText);
+      errors.push(errorText);
+    }
+  } else {
+    errors.push("Permission denied for file " + fileName  + " in folderId " + folderId);
+    console.error( errors[errors.length - 1] );
+  }
+  
+  if (errors.length > 0) {
+    sendTheDeveloperTheError(errors.join("") + errors.length + " errors.");
+    return false;
+  } else {
+    return true;
+  }
+}
+
+
+/**
+ * Copy SUBY00 template into teacherFolder 
+ * Rename it to: Y2019 IB Mathematical Studies JK Jun2019 Reportbook
+   (title is from the current RB Tracker)
+ *
+ * @param {string} courseId the Classroom id for this course
+ * @return {number} docId of the newly created Reportbook
+ */
+function createReportbook(courseId) {
   
 }
 
 /**
- * Explanation of function
- * @param {string} arg
- * @return {number}
+ * Update class details (title, teacher, student list etc) from RB Tracker to RB
+ * @param {string} courseId the Classroom id for this course
+ * @return {number} docId of the newly created Reportbook
  */
-function createRBTracker() {
+function updateReportbook(courseId) {
   
 }
 
@@ -104,13 +317,13 @@ function getStudentsFromClassroom() {
   
 }
 
-function TEST_createRBs() {
+function TEST_updateReportbookClassrooms() {
   importClassrooms("john.kershaw@hope.edu.kh");
 }
 
 
 
-function importClassrooms(teacherId) {
+function updateReportbookClassrooms(teacherId) {
   if (teacherId == undefined) {
     teacherId = "";
   }
@@ -125,8 +338,6 @@ function importClassrooms(teacherId) {
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
   
-  //sheet = rb.getSheetByName("Copy of Reportbooks");
-    
   var c, row, course;
   var goodRowsStart, goodRowsEnd;
   var badRowsStart, badRowsEnd;
@@ -143,6 +354,9 @@ function importClassrooms(teacherId) {
     sheet.getRange(row, 3).setValue(course.alternateLink);
     sheet.getRange(row, 4).setValue(course.id);
     sheet.getRange(row, 5).setValue(course.ownerId);
+    if (course.teacherFolder != undefined && course.teacherFolder.id != undefined) {
+      sheet.getRange(row, 6).setValue(course.teacherFolder.id);
+    }
   }
   goodRowsEnd = row;
   
@@ -169,6 +383,10 @@ function importClassrooms(teacherId) {
     sheet.getRange(row, 3).setValue(course.alternateLink);
     sheet.getRange(row, 4).setValue(course.id);
     sheet.getRange(row, 5).setValue(course.ownerId);
+    
+    if (course.teacherFolder != undefined && course.teacherFolder.id != undefined) {
+      sheet.getRange(row, 6).setValue(course.teacherFolder.id);
+    }
   }
 
   badRowsEnd = row;
@@ -189,7 +407,7 @@ function importClassrooms(teacherId) {
   for (var goodBad = 0; goodBad < rows.length; goodBad ++) {
   sheet.getRange(rows[goodBad][START], 2, rows[goodBad][END], 5)
   .sort(
-    [{column: 6, ascending: true}, // teacher name, alpha 
+    [{column: 8, ascending: true}, // teacher name, alpha 
      {column: 2, ascending: true}  // courseName
     ]);
   }
@@ -244,7 +462,8 @@ function getCoursesFromClassroom(teacherId) {
   var optionalArgs = {
     pageSize: 50,
     teacherId: teacherId,
-    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId",
+    // NO SPACES!
+    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId,courses.teacherFolder.id",
     pageToken: ""
   };
   
@@ -259,7 +478,7 @@ function getCoursesFromClassroom(teacherId) {
         
         var course = rCourses[i];
         // Logger.log('%s', course.name.slice(0,3));
-        if (course.name.slice(0,3) == "Y20") {
+        if (course.name.slice(0,3) == "Y20" && course.name.indexOf("Pastoral") == -1) {
           courses.push(course);
           console.log("Adding course: " + course);
         } else {
