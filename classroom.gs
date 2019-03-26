@@ -1,10 +1,10 @@
 /**
-* 0. Check main.gs / TESTING = false
+* Check main.gs / TESTING = false
 * 
-* 1. Run updateReportbookClassrooms to pull data from Classroom into Reportbooks tab
-*
-* 2. Run createMissingReportbooks()
-*
+* updateReportbookClassrooms to pull data from Classroom into Reportbooks tab
+* getTeachersFromTracker - grab list of teachers from Classroom using ownerIds in RB Tracker
+* createMissingReportbooks - creates a reportbook from the template for each row in RB Tracker
+* import
 */
 
 
@@ -43,59 +43,58 @@ function createMissingReportbooks() {
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
   
-  var rbData = getRows(rbSheet);
+  var rbRows = getRows(rbSheet);
   
   var errors = [];
-  var rbFolderId = "1ixgKE3RJ_XRR_9Fu2mMsLNuz-wj-VpbT";
-  for (var r = 0; r < rbData.length; r++) {
+  for (var row = 0; row < rbRows.length; row++) {
+    var rbRow = rbRows[row];
+    
+    Logger.log(rbRow.courseName);
     
     // ESCAPE ROUTE - only do the first two rows
     // if (r >= 2) break;
     
-    if (rbData[r]["valid"]) {
-      var rbTitle     = rbData[r]["Reportbook Title"];
-      var rbId        = rbData[r]["rbId"];
-      var email       = rbData[r]["ownerEmail"]
-      var teacherName = rbData[r]["ownerName"];
-      var subjectName = rbData[r]["Subject Name in Report"];
+    if (rbRow.Sync) {
       
       // look for missing rbIds
-      if (! rbData[r]["rbId"]) {
-        var courseName = rbData[r]["courseName"];
+      if (! rbRow.rbId) {
+        var courseName = rbRow.courseName;
         console.log("Missing rbId for " + courseName);
-            
+        
         // if not found: create doc
+        // TODO move this into createReportbook stub
+        var rbFolderId = "1ixgKE3RJ_XRR_9Fu2mMsLNuz-wj-VpbT";
+        
+        var rbTitle = rbRow["Reportbook Title"];
         if (! fileExists(rbTitle, rbFolderId) ) {
-          rbId = copyFile(top.FILES.SUBY00, rbFolderId, reportbookTitle);
-        }    
-      }
-      
-      // TODO: move this into 'if not found: create doc'
-      if (rbId && rbId.length > 10) {
-        rbData[r]["rbId"] = rbId;
-        
-        // update tracker row with rbId
-        rbSheet.getRange(r + 2, 1).setValue(rbId);
-        addEditor(rbId, email);
-        updateReportbookMetadata(rbId, subjectName, teacherName);
-        
-        var classroomPermission = havePermission(rbData[r]["teacherFolder"]);
-        if (classroomPermission) {
-          var alreadyLinked = fileExists(rbTitle, rbData[r]["teacherFolder"] );
-          if ( ! alreadyLinked ) {
-            linkFile(rbId, rbData[r]["teacherFolder"]);
+          var newRbId = copyFile(top.FILES.SUBY00, rbFolderId, rbTitle);
+          var email       = rbRow["ownerEmail"]
+          var teacherName = rbRow["ownerName"];
+          var subjectName = rbRow["Subject Name in Report"];
+          
+          if (newRbId && newRbId.length > 10) {
+            rbRows[row]["rbId"] = newRbId;
+            
+            // update tracker row with rbId
+            rbSheet.getRange(row + 2, 1).setValue(newRbId);
+            addEditor(newRbId, email);
+            updateReportbookMetadata(newRbId, subjectName, teacherName);
+            
+            var classroomPermission = havePermission(rbRow["teacherFolder"]);
+            if (classroomPermission) {
+              var alreadyLinked = fileExists(rbTitle, rbRow["teacherFolder"] );
+              if ( ! alreadyLinked ) {
+                linkFile(newRbId, rbRow["teacherFolder"]);
+              }
+            } else {
+              console.error("Permission denied for " + rbTitle);
+            }
           }
-        } else {
-          console.error("Permission denied for " + rbTitle);
-        }
+        }  
       }
-      // END TODO
-      
     }
   }
-  
-  
-  return rbData;
+  return rbRows;
 }
 
 function TEST_addEditor() {
@@ -128,48 +127,34 @@ function updateReportbookMetadata(rbFileId, subjectName, teacherName) {
   Logger.log("Updated reportbook metadata: ");
 }
 
-function copyFile (fileId, folderId, newName) {
-  console.log("copyFile(" + fileId + ", " + folderId + ", " + newName + ")");
-  var folder = DriveApp.getFolderById(folderId);
-  var subId = DriveApp.getFileById(fileId);
-
-  var rb = subId.makeCopy(newName, folder);
-  if (rb) {
-    console.log("Copied " + subId.getName() + " into folder " + folder.getName() + " as " + newName);
-  } else {
-    console.error("FAILED: link " + file.getName() + " into folder " + folder.getName() + " as " + newName);
-  } 
-  return rb.getId();
-}
-
-function TEST_linkFile() {
-  // Y2022 IGCSE CS JKw Jun2019 Reportbook
-  var fileId = "1foZ6ZvDjp0sAX3aW33lzfQRjLnCW-h8_svyB60jN5pI";
-  var folderId = "0ByUSUXY3mRrIfjNpREozM3RWdmtRemNXaVVmcGVDZzR4dTk4VVJDVERrRDNUaG0wRDFTUTA";
-  linkFile(fileId, folderId);
-}
-
-function linkFile(fileId, folderId) {
-  // link means to add another parent to an existing file
-  console.log("linkFile(" + fileId + ", " + folderId + ")" );
-  var folder = DriveApp.getFolderById(folderId);  
-  var file = DriveApp.getFileById(fileId);
-  var linkedFolder = folder.addFile(file);
-  if (linkedFolder) {
-    console.log("Linked " + file.getName() + " into folder " + folder.getName());
-  } else {
-    console.error("FAILED: link " + file.getName() + " into folder " + folder.getName());
-  } 
-    return linkedFolder.getName();
+function TEST_fileFunctions() {
+  TEST_fileExists();
+  TEST_havePermission();
+  TEST_removeFileFromFolder();
 }
 
 function TEST_fileExists() {
-  var fileName = "Y2022 IGCSE CS JKw Jun2019 Reportbook";
-  var folderId = "0ByUSUXY3mRrIfjNpREozM3RWdmtRemNXaVVmcGVDZzR4dTk4VVJDVERrRDNUaG0wRDFTUTA";
-  Logger.log(fileExists( fileName, folderId) );
+  var testFolderId = "158fKZJ2YguKhRrR6CYKfYpl7PEvf6GX-";
+  var copyFolderId = "1PtGBTxVZEoITrGZnCBM_1TEqQn3iYyTs";
+  var linkFolderId = "1jeaC1J_04tGlUEXMOPTCQ3tYgaNy8WhJ";
 
-  var fileName = "fishy wishy";
-  Logger.log(fileExists( fileName, folderId) );
+  var testFileId = "1Gvabvr8396KZbiWuT47ihJ9Qo4NNLoreeVX6N6NOlwo";
+  var testFileName = "This is a test file";
+
+  // test that an existing file is actually there
+  var result = fileExists(testFileName, testFolderId);
+  Logger.log ("Existing file exists? " + result);
+  if (result != true) {
+    throw ("FAILED: TEST_fileExists should return true for an existing file");
+  }
+
+  // test that a missing file is really missing
+  var missingFileName = "No file with this name";
+  var result = fileExists( missingFileName, testFolderId);
+  Logger.log (result);
+  if (result != false) {
+    throw ("FAILED: TEST_fileExists: should return false for a missing file");
+  }
 }
 
 
@@ -180,6 +165,67 @@ function TEST_havePermission() {
   // circuit scramble
   var folderId = "15vEo8P3G-bBXemg7CsTpCLzZR1c7p7t4";
   Logger.log (havePermission(folderId));
+}
+
+
+function TEST_copyFile() {
+  // test folder: https://drive.google.com/drive/folders/158fKZJ2YguKhRrR6CYKfYpl7PEvf6GX-
+  var testFileId = "1Gvabvr8396KZbiWuT47ihJ9Qo4NNLoreeVX6N6NOlwo";
+  var destFolderId = "1PtGBTxVZEoITrGZnCBM_1TEqQn3iYyTs";
+  var newName = "I am a copy";  
+  Logger.log ( copyFile (testFileId, destFolderId, newName) );
+}
+
+function TEST_linkFile() {
+  // Y2022 IGCSE CS JKw Jun2019 Reportbook
+  var fileId = "1foZ6ZvDjp0sAX3aW33lzfQRjLnCW-h8_svyB60jN5pI";
+  var folderId = "0ByUSUXY3mRrIfjNpREozM3RWdmtRemNXaVVmcGVDZzR4dTk4VVJDVERrRDNUaG0wRDFTUTA";
+  linkFile(fileId, folderId);
+}
+
+function TEST_removeFileFromFolder() {
+  // test folder: https://drive.google.com/drive/folders/158fKZJ2YguKhRrR6CYKfYpl7PEvf6GX-
+  var testFileId = "1Gvabvr8396KZbiWuT47ihJ9Qo4NNLoreeVX6N6NOlwo";
+  var destFolderId = "1PtGBTxVZEoITrGZnCBM_1TEqQn3iYyTs";
+  Logger.log ( removeFileFromFolder (testFileId, destFolderId) );
+}
+
+function removeFileFromFolder(fileId, folderId) {
+  var file = DriveApp.getFileById(fileId);
+  if (file) {
+   Logger.log ('removeFileFromFolder (' + file.getName() + ', ' + folderId + ')' ); 
+    
+  };
+}
+  
+function copyFile (srcId, destFolderId, newName) {
+  console.log("copyFile(" + srcId + ", " + destFolderId + ", " + newName + ")");
+  var destFolder = DriveApp.getFolderById(destFolderId);
+  var srcFile = DriveApp.getFileById(srcId);
+
+  var newFile = srcFile.makeCopy(newName, destFolder);
+  if (newFile) {
+    console.log("Copied " + srcFile.getName() + " into folder " + destFolder.getName() + " as " + newName);
+    return newFile.getId();
+  } else {
+    console.error("FAILED: copy " + srcFile.getName() + " into folder " + destFolder.getName() + " as " + newName);
+    return false;
+  } 
+}
+
+function linkFile(fileId, folderId) {
+  // link means to add another parent to an existing file
+  console.log("linkFile(" + fileId + ", " + folderId + ")" );
+  var folder = DriveApp.getFolderById(folderId);  
+  var file = DriveApp.getFileById(fileId);
+  var linkedFolder = folder.addFile(file);
+  if (linkedFolder) {
+    console.log("Linked " + file.getName() + " into folder " + folder.getName());
+    return linkedFolder.getName();
+  } else {
+    console.error("FAILED: link " + file.getName() + " into folder " + folder.getName());
+    return false;
+  } 
 }
 
 function havePermission(folderId) {
@@ -197,16 +243,22 @@ function havePermission(folderId) {
 }
 
 function fileExists(fileName, folderId) {
+  var fileId = undefined;
   var folder = havePermission(folderId);
   var errors = [];
   
   if (folder) {
   var folderName = folder.getName();
     try {
+      // any files at all?
       var filesList = folder.getFilesByName(fileName);
+      
       if (filesList.hasNext()) {
-        file = filesList.next();
+        var file = filesList.next();
+        var fileId = file.getId();
         Logger.log('File exists: ' + file.getName() + " in folder " + folderName );
+     
+        
       } else {
         errors.push('File: ' + fileName + " not found in folder " + folderName);
         console.error( errors[errors.length - 1] );
@@ -223,14 +275,15 @@ function fileExists(fileName, folderId) {
   
   if (errors.length > 0) {
     sendTheDeveloperTheError(errors.join("") + errors.length + " errors.");
-    return false;
-  } else {
-    return true;
   }
+  
+  return fileId;
 }
 
 
 /**
+ * TODO extract code from updateReportbooks
+ * 
  * Copy SUBY00 template into teacherFolder 
  * Rename it to: Y2019 IB Mathematical Studies JK Jun2019 Reportbook
    (title is from the current RB Tracker)
@@ -242,7 +295,9 @@ function createReportbook(courseId) {
   
 }
 
-/**
+/** 
+ * TODO extract code from updateReportbooks
+ * 
  * Update class details (title, teacher, student list etc) from RB Tracker to RB
  * @param {string} courseId the Classroom id for this course
  * @return {number} docId of the newly created Reportbook
@@ -311,10 +366,6 @@ function getTeachersFromTracker() {
   //Logger.log(newTeachers);
   tSheet.getDataRange().setValue("");
   tSheet.getRange(1, 1, newTeachers.length, newTeachers[0].length).setValues(newTeachers);
-}
-
-function getStudentsFromClassroom() {
-  
 }
 
 function TEST_updateReportbookClassrooms() {
@@ -405,7 +456,7 @@ function updateReportbookClassrooms(teacherId) {
   
   // sort rows
   for (var goodBad = 0; goodBad < rows.length; goodBad ++) {
-  sheet.getRange(rows[goodBad][START], 2, rows[goodBad][END], 5)
+  sheet.getRange(rows[goodBad][START], 2, rows[goodBad][END], 8)
   .sort(
     [{column: 8, ascending: true}, // teacher name, alpha 
      {column: 2, ascending: true}  // courseName
@@ -505,6 +556,13 @@ function getCoursesFromClassroom(teacherId) {
   console.log(courses.length, misnamedCourses.length);
   return [courses, misnamedCourses];
 }
+
+function getStudentsFromClassroom() {
+  // loop through reportbooks
+  // grab students (first, last, email)
+  // push to rbId's OVERVIEW tab
+}
+
 
 /*
 

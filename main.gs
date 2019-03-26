@@ -1,4 +1,4 @@
-var TESTING = false; // true
+var TESTING = true; // false/true
 
 // main.gs ===================================================
 // holds global objects for various doc IDs, eventually these 
@@ -27,9 +27,9 @@ var TESTING = false; // true
 var top = {
   "students": [],
   
-  // DELETE "rbTemplatesId": "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys",
-  // DELETE "SUBY00TemplateId": "17ZJgVhi_SQeoJffFmjdcOFsMp0FRiZVIkjulnmQXJBw",
-  // DELETE "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
+  // DELETE? "rbTemplatesId": "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys",
+  // DELETE? "SUBY00TemplateId": "17ZJgVhi_SQeoJffFmjdcOFsMp0FRiZVIkjulnmQXJBw",
+  // DELETE? "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
   FILES: {
     // reportbook trackers in semester order: rb(Dec|Jun)\d{4}
