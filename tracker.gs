@@ -21,12 +21,12 @@ var bobby = {
 
 
 // TODO finish this - add  
-function testUpdateStudentFromSheet() {
+function TEST_updateStudentFromSheet() {
   var fromSheetKid = "nofirstname.nolastname@students.hope.edu.kh";
   student = getStudentByEmail(fromSheetKid);
 }
 
-function testCreateStudentFullInfo() {
+function TEST_createStudentFullInfo() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
 
   var email = paulson.email;
@@ -56,7 +56,7 @@ function testCreateStudentFullInfo() {
   if (student.fileid === undefined || student.fileid == "") {
     logIt("Failed to create fileid for " + email, meta);
   }
-  if (student.fileid.length != top.rbTemplatesId.length) {
+  if (student.fileid.length != top.FILES.RBTEMPLATES.length) {
     logIt("fileid (" + student.fileid + "wrong length for " + email, meta);
   }
 
@@ -64,7 +64,7 @@ function testCreateStudentFullInfo() {
   deleteRowByEmail(email);
 }
 
-function testDeleteRowByEmail() {
+function TEST_deleteRowByEmail() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   deleteRowByEmail(paulson.email);
   deleteRowByEmail(bobby.email);
@@ -85,31 +85,31 @@ function deleteRowByEmail(email) {
     
     logIt("Deleting " + email + " from row " + student.row, meta);
     SpreadsheetApp
-    .openById(top.rbTrackerId)
-    .getSheetByName("Portfolios")
+    .openById(top.FILES.RBTRACKER)
+    .getSheetByName(top.SHEETS.PORTFOLIOS)
     .deleteRow(student.row);
   }
 }
 
 function createStudentFullInfo(student) {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
-  try {
+  //try {
     student = createPortfolioRow(student);
-  }
+  //}
   
-  catch(e) {
-    throw e;
-  }
+  //catch(e) {
+  //  throw e;
+  //}
   
   return student;
 }
 
 
-function makeLink(fileId) {
-  return "https://docs.google.com/spreadsheets/d/" + fileId + "/edit"; 
+function makeLink(fileid) {
+  return "https://docs.google.com/spreadsheets/d/" + fileid + "/edit"; 
 }
 
-function testGetStudentByEmail() {
+function TEST_getStudentByEmail() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   var student = {};
   
@@ -147,7 +147,7 @@ function testGetStudentByEmail() {
     "email": "tom.kershaw@students.hope.edu.kh",
     "fullname": "Tom Kershaw",
     "year": "Y09",
-    "filename": "KERSHAW, Tom (Sem 1 2018 Report)",
+    "filename": "KERSHAW, Tom (" + top.META.SEM + " Report)",
     "fileid": "1I2WDPzVVat5xwczFGW2iUtyEivsThKa9Y8YgZAno3GM",
     "link": "https://docs.google.com/spreadsheets/d/1I2WDPzVVat5xwczFGW2iUtyEivsThKa9Y8YgZAno3GM/edit",
     "tabs": "ENG",
@@ -219,7 +219,7 @@ function initialiseStudents() {
   var students = [];
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  var sheet = rb.getSheetByName("Portfolios");
+  var sheet = rb.getSheetByName(top.SHEETS.PORTFOLIOS);
   var data = sheet.getDataRange().getValues();
   
   var student;
@@ -286,6 +286,7 @@ function getStudent(student) {
   if (! studentFound) { 
     logIt("Student not found " + student.email, meta);
     student.row = -1;
+    //createStudent(student);
   }
   
   // Logger.log("Student " + student.email + " is on row " + student.row); 
@@ -293,19 +294,36 @@ function getStudent(student) {
 }
 // END getStudent
 
+
+function createStudents() {
+  // once students are in the Portfolios tab (first, last, email)
+  // run this script to generate Portfolio files for them all
+  //var students = initialiseStudents();
+  
+  for (var i = 0; i < top.students.length; i++) {
+    //if (i > 2) break;
+    
+    var student = top.students[i];
+    Logger.log(student.fullname);
+    
+    student = createStudent(student);    
+  }
+}
+
+
 function createStudent(student) {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
 
   // already exists?
   if (getStudent(student).row > 0) {
-    updateStudent(student);
+    updateStudentRow(student);
   
   } else {
     //  create new line in RB Tracker
     student = createPortfolioRow(student);
   }
   
-  if (! student.fileId) {
+  if (! student.fileid || student.fileid.length < 10) {
     // create a new file & store its fileid etc in RB Tracker
     createPortfolioFile(student);
   }
@@ -332,8 +350,8 @@ function createPortfolioRow(student) {
     throw errMsg;
   }
   
-  var rb = SpreadsheetApp.openById(top.rbTrackerId);
-  var sheet = rb.getSheetByName("Portfolios");
+  var rbId = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var sheet = rbId.getSheetByName(top.SHEETS.PORTFOLIOS);
  
   var studentRow = -1;
   var rows = sheet.getDataRange().getValues();
@@ -348,32 +366,41 @@ function createPortfolioRow(student) {
   
   Logger.log("studentRow: " + studentRow);
   
-  if (studentRow != -1) {
-    logIt(student, meta);
-    // TODO updateStudent(student);
-    throw "Cannot create portfolio row, student already exists";
+  if (studentRow == -1) {
+      
+    logIt("Creating a new row for student" + student.email);
+    sheet.appendRow([
+      student.lastname, 
+      student.firstname, 
+      student.email, 
+      "", // fullname will be overwritten by a calculation
+      student.year
+    ]);
+    studentRow = sheet.getLastRow();
+    student.row = studentRow;
   }
+
+  updateStudentRow(student);
   
-  logIt("Creating a new row for student" + student.fullname);
-  sheet.appendRow([
-    student.lastname, 
-    student.firstname, 
-    student.email, 
-    "", // fullname will be overwritten by a calcuation
-    student.year
-  ]);
-  studentRow = sheet.getLastRow();
-  student.row = studentRow;
+  return student;
+}
+// END getStudentRow
+
+function updateStudentRow(student) {
+  var sheet = SpreadsheetApp
+  .openById(top.FILES.RBTRACKER)
+  .getSheetByName(top.SHEETS.PORTFOLIOS);
   
   updatePortfolioFormulas();
+
   student.fullname = sheet.getRange(student.row, top.COLS.FULLNAME).getValue();
   student.filename = sheet.getRange(student.row, top.COLS.FILENAME).getValue();
 
-  student = createPortfolioFile(student);
+  if (! student.fileid || student.fileid.length < 10) {
+    student = createPortfolioFile(student);
+  }
   
   // store fileid in tracker
-  var rb = SpreadsheetApp.openById(top.rbTrackerId);
-  var sheet = rb.getSheetByName("Portfolios");
   sheet.getRange(student.row, top.COLS.FILEID).setValue(student.fileid);
   
   student.fileid = sheet.getRange(student.row, top.COLS.FILEID).getValue();
@@ -381,39 +408,68 @@ function createPortfolioRow(student) {
   
   return student;
 }
-// END getStudentRow
 
+function TEST_createPortfolioFile() {
+  var student = {};
+  student.filename = "Test Student";
+  student.firstname = "Test";
+  student.lastname = "Student";
+  student.email = "test.student@hope.edu.kh";
+  student.fullname = student.firstname + " " + student.lastname;
+  
+  student = createPortfolioFile(student);
+  Logger.log( student.file.getUrl() );
+}
 
 function createPortfolioFile(student) {
   
   if (student.filename === undefined || student.filename.length < 2) {
-    throw "Cannot create portfolio file, missing student.filename"  
+    throw "Cannot create portfolio file, missing student.filename";
   }
-  var templatesId = SpreadsheetApp.openById(top.rbTemplatesId);
   
-  var pastoralSheetName = "Pastoral";
-  
-  var pastoralTemplateSheet = templatesId.getSheetByName(pastoralSheetName);
-  
-  var new_rows = 5;
-  var new_cols = 2;
-  var studentFile = SpreadsheetApp.create(student.filename, new_rows, new_cols);
-  
-  var adminSheet = studentFile.getSheets()[0].setName("Admin");
-  adminSheet.setName("Admin")
-  .getRange("A1:B2")
-  .setValues([
-    ["Created on",new Date()],
-    ["Created by",Session.getActiveUser().getEmail()]
-  ]);
-  adminSheet.setColumnWidth(2, 200);
-  adminSheet.getRange("B:B").setHorizontalAlignment("left");
-  
-  student.fileid = studentFile.getId();
-  
-  var pastoralSheet = pastoralTemplateSheet.copyTo(studentFile);
-  pastoralSheet.setName("Pastoral");
-  pastoralSheet.getRange("B4").setValue(student.fullname);
+  if (! student.fileid || student.fileid.length < 10) {
+    
+    // create an empty Portfolio file (spreadsheet)
+    student.file = SpreadsheetApp.create( student.filename );
+    
+    var templatesId = SpreadsheetApp.openById( top.FILES.RBTEMPLATES );
+    
+    // copy the Admin sheet from the Templates document
+    var adminSheetName = "Admin";  
+    var adminTemplateSheet = templatesId.getSheetByName(adminSheetName);
+    
+    var adminSheet = adminTemplateSheet.copyTo(student.file);
+    
+    adminSheet.setName("Admin");
+    
+    adminSheet.getRange("A1:B2")
+    .setValues([
+      ["Created on",new Date()],
+      ["Created by",Session.getActiveUser().getEmail()]
+    ]);
+    
+    adminSheet.getRange("A5:B7")
+    .setValues([
+      ["First name", student.firstname],
+      ["Last name", student.lastname],
+      ["Email", student.email]
+    ]);
+    
+    student.fileid = student.file.getId();
+    
+    // copy the Pastoral sheet from the Templates document
+    var pastoralSheetName = "Pastoral";  
+    var pastoralTemplateSheet = templatesId.getSheetByName(pastoralSheetName);
+    
+    var pastoralSheet = pastoralTemplateSheet.copyTo(student.file)
+    .setName("Pastoral")
+    .getRange("B4").setValue(student.fullname);
+    
+    
+    // delete the default 'Sheet1' sheet
+    var sheet1 = student.file.getSheets()[0];
+    student.file.deleteSheet(sheet1);
+  }
   
   return student;
 }

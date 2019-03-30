@@ -14,10 +14,13 @@ function exportAllRBs() {
   
 
   var idsToExport = getRbIdsToExport();
+  console.log ("%s reportbooks tagged for export", idsToExport.length);
   console.log (idsToExport);
   
   var studentsToUpdate = getStudentsToUpdate();  
-  //Logger.log (studentsToUpdate);
+  console.log ("%s students tagged for export", studentsToUpdate.length);
+  console.log (studentsToUpdate);
+  
   if (studentsToUpdate != []) {
     exportOverride = "ALL";
   }
@@ -41,18 +44,18 @@ function exportAllRBs() {
     
     // SAFETY CATCH
     
-    //if (r > 4) break;
+    if (r > 15) break;
     
     // SAFETY CATCH
     
     var rbId = rbIds[r];
     Logger.log(rbId);
     if (idsToExport.indexOf(rbId) == -1) {
-      // console.info("Skipping %s", rbId);
+      console.info("Skipping %s", rbId);
       continue;
       
     } else {
-      //console.info("%s is ticked for export", rbId);
+      console.info("%s is ticked for export", rbId);
       var rbss = SpreadsheetApp.openById(rbId);
       var rbName = rbss.getName();
 
@@ -73,7 +76,7 @@ function getRbIdsToExport() {
   var rbSheet = rbTracker.getSheetByName(top.SHEETS.REPORTBOOKS);
   var lastRow = rbSheet.getLastRow();
   
-  var rawIds = rbSheet.getRange(2, top.COLS.IDSTOEXPORT, lastRow, 1).getValues();
+  var rawIds = rbSheet.getRange(2, top.COLS.RBIDSTOEXPORT, lastRow, 1).getValues();
   
   var idsToExport = [];
   var thisId;
@@ -248,20 +251,20 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var replacementRows = [];
 
   //Logger.log(namesGrades, meta);
-
+  
   var yesRows = rows.filter(
     function yes(arr) {
-    return ["Y", "y"].indexOf(arr[27]) > -1;
+      return ["Y", "y"].indexOf(arr[27]) > -1;
     }
   );
   
   // perform once per RB, not once per student!
   //if (yesRows.length > 0 || ) {
-    updateIndividualReportTab(rbss);
+  updateIndividualReportTab(rbss);
   //} 
   
   //console.log("%d rows marked Y %s", yesRows.length, exportOverride == "ALL" ? " but OVERRIDE=true" : "", meta);
-    
+  
   // loop through students marked for export ie col Z="Y":
   for (var r=0; r<rows.length; r++) {
     
@@ -551,7 +554,7 @@ function addPastoralToEveryStudent() {
 function copyTemplateToStudent(student, templateName, replace) {
   if (replace === undefined) replace = false;
   
-  return copySheet(top.rbTemplatesId, student.fileid, 
+  return copySheet(top.FILES.RBTEMPLATES, student.fileid, 
                templateName, templateName, replace);
 }
 
@@ -602,7 +605,7 @@ function addSubTemplate(student, tabName) {
  
   // open the tab templates file
   // TODO DELETE var rbTemplatesId = "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys";
-  var rbTemplateSS = SpreadsheetApp.openById(top.rbTemplatesId);
+  var rbTemplateSS = SpreadsheetApp.openById(top.FILES.RBTEMPLATES);
 
   // copy the 'SUB' tab into the student portfolio
   var subjectSheetName = "SUB";

@@ -270,7 +270,7 @@ function updatePortfolioFormulas() {
       "sheet": "Portfolios", 
       "cell": "F2", 
       "range": "F3:F", 
-      "formula": '=UPPER(A2) & ", " & B2 & " (Sem 1 2018 Report)"',
+      "formula": '=UPPER(A2) & ", " & B2 & " (' + top.META.SEM + ' Report)"',
       // TODO "r1c1": false;
     },
     {
@@ -283,7 +283,7 @@ function updatePortfolioFormulas() {
     }
   ];
   
-  var rb = SpreadsheetApp.openById(top.rbTrackerId);
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   updateFormulas(rb, formulas);
   
 }

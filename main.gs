@@ -1,4 +1,4 @@
-var TESTING = true; // false/true
+var TESTING = false; // false/true
 
 // main.gs ===================================================
 // holds global objects for various doc IDs, eventually these 
@@ -6,7 +6,7 @@ var TESTING = true; // false/true
 // =============================================================
 
 
-// SEE README.gs for details of each file's purpose
+// SEE README.gs for instructions and details of each file's purpose
 
 
 // TODO FIX var sheet = rb.getSheetByName("Portfolios");
@@ -18,7 +18,7 @@ var TESTING = true; // false/true
 //    "email": "tom.kershaw@students.hope.edu.kh",
 //    "fullname": "Tom Kershaw",
 //    "year": "Y09",
-//    "filename": "KERSHAW, Tom (Sem 1 2018 Report)",
+//    "filename": "KERSHAW, Tom (" + top.META.SEM + " Report)",
 //    "fileid": "1I2WDPzVVat5xwczFGW2iUtyEivsThKa9Y8YgZAno3GM",
 //    "link": "https://docs.google.com/spreadsheets/d/1I2WDPzVVat5xwczFGW2iUtyEivsThKa9Y8YgZAno3GM/edit",
 //    "tabs": "ENG",
@@ -31,6 +31,10 @@ var top = {
   // DELETE? "SUBY00TemplateId": "17ZJgVhi_SQeoJffFmjdcOFsMp0FRiZVIkjulnmQXJBw",
   // DELETE? "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
+  META: {
+    "SEM": "Jun2019"  
+  },
+  
   FILES: {
     // reportbook trackers in semester order: rb(Dec|Jun)\d{4}
     "rbDec2018": "1D3OEcKrRIWpJmopP07u-KWh6sQHae2Q3dSTzo6uMFVc",
@@ -71,10 +75,11 @@ var top = {
   },
   
   COLS: {
-    // Columns in Reportbooks sheet
-    IDSTOEXPORT: 12,
+    // Columns in REPORTBOOKS sheet
+    RBIDS: "A2:A",
+    RBIDSTOEXPORT: 22,
     
-    // Columns in Portfolios Sheet
+    // Columns in PORTFOLIOS Sheet
     LASTNAME: 1,
     FIRSTNAME: 2,
     EMAIL: 3,
@@ -179,9 +184,9 @@ var template = {
 
 function getRbIds() {
 
-  var rawIds = SpreadsheetApp.openById(top.rbTrackerId)
+  var rawIds = SpreadsheetApp.openById(top.FILES.RBTRACKER)
   .getSheetByName("Reportbooks")
-  .getRange("A2:A").getValues();
+  .getRange(top.COLS.RBIDS).getValues();
   //Logger.log(raw_ids);
   
   var cleanIds = [];
