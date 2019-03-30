@@ -44,7 +44,7 @@ function exportAllRBs() {
     
     // SAFETY CATCH
     
-    if (r > 15) break;
+    // if (r > 15) break;
     
     // SAFETY CATCH
     
@@ -213,9 +213,13 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var srcName = rbss.getName();
   var owner = rbss.getOwner();
   var len = srcName.length;
-  var subYear = srcName.substring(0,len-11);
-  var tabName = srcName.substring(0,len-15);
-  var sub = tabName.substring(0, 3);
+  
+  // TODO FIXME subYear and tabName should come from Reportbooks tab
+  var subYear = srcName.substring(0,5);
+  var tabName = rbss.getSheetByName(top.SHEETS.OVERVIEW)
+  .getRange(top.RANGES.OVERVIEWSUBJECT).getValue();
+
+  var sub = tabName;
   //var students = getStudents();
   
   console.warn("[%s] >>> Checking for %s", subYear, owner);

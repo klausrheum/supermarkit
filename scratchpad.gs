@@ -1,3 +1,18 @@
+function extractTabName() {
+  var rbssId = "1E9SOqXdsqWlmyWrl08pkg4GiZ78fksdjeABxbzz1vxM";
+  var rbss = SpreadsheetApp.openById(rbssId);
+  var srcName = "Y2021 Christian Perspectives TB Jun2019 Reportbook"; // rbss.getName();
+  
+  
+  // TODO FIXME subYear and tabName should come from Reportbooks tab
+  var len = srcName.length;
+  var subYear = srcName.substring(0,5);
+  Logger.log(subYear);
+  var tabName = rbss.getSheetByName(top.SHEETS.OVERVIEW)
+  .getRange(top.RANGES.OVERVIEWSUBJECT).getValue();
+  Logger.log(tabName);
+}
+
 function falsey() {
   // falsy values
   if (false) Logger.log("True!");
