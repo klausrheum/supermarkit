@@ -6,34 +6,58 @@
 
 
 function updateReportbooks() {
-  var rbIds = getRbIds();
+  console.log("updateReportbooks()");
   
-  var aaa_testerbook = "1cLCGk3RBa-Y5zqf7CT8GEwDRD-GtJBOka7_41NUsi5U";
-  var phy09copy = "1dQra-gLWOZ0oLiUCsGXPGeGNnZQaqI2rEynAYbstdS8";
-  var englit09 = "1qvEbFGLUMEAxGfk0Bmfnb1Y5nvUGMICWPdNcCXQ9__E";
-  var csc10 = "1jI0UpPD9Imz9SUXwcRUI8CaucrHuKhOg_Mi5GQJKJFI";
-  //var rbIds = [csc10];
+  var rbRows = getRbRows();
   
-  for (var i=0; i < rbIds.length; i++) {
+  for (var row = 0; row < rbRows.length; row++) {
+    var rbRow = rbRows[row];
+    var id = rbRow.rbId;
+    var geo2019sl = "1HV01YukUG42Gytg1Ve6fO1veFSudRCdKsU0Q9ph6_Xw";
     
+    // skip empty rbIds
+    if (! id || id.length < 2) { 
+      continue;
+    }
+        
+    console.log(rbRow.courseName);
+
     // SAFETY CATCH =============================
     
-    //if (i>10) break; // stop after two reportbooks
+    //if (row > 10) break; // stop after 10 reportbooks
     
     // END SAFETY CATCH =========================
     
-    id = rbIds[i];
     var ss = SpreadsheetApp.openById(id);
     //console.info("Updating " + ss.getName());
+    var rbSubject = rbRow["Subject Name in Report"];
+    var rbTeacher = rbRow["ownerName"];
     
     var overviewSubjectTeacher = ss.getSheetByName(top.SHEETS.OVERVIEW)
     .getRange("B1:B2").getValues();
-    console.log("[%s] %s", ss.getName(), overviewSubjectTeacher);
+    var overviewSubject = overviewSubjectTeacher[0][0];
+    var overviewTeacher = overviewSubjectTeacher[1][0];
+    
+    console.log( "fileName: %s", ss.getName() );
+    var updateMeta = false;
+    if (rbSubject != overviewSubject) {
+      updateMeta = true;
+      console.warn("Mismatched SUBJECT: overview: %s != rb: %s", overviewSubject, rbSubject);
+    }
+    if (rbTeacher != overviewTeacher) {
+      updateMeta = true;
+      console.warn("Mismatched TEACHER: overview: %s != rb: %s", overviewTeacher, rbTeacher);
+    }
+    
+    if (updateMeta) {
+      // FIXME: Need to pull subjectName, teacherName from Reportbooks tab
+      // updateReportbookMetadata(id, subjectName, teacherName);
+    }
     
     //    updateCommentsColumn(ss);
     //    updateExportColumns(ss);
     //    updateFreezeRows(ss);
-    //    updateRBFormulas(ss);
+    //  updateRBFormulas(ss);
     //    updateDeleteUnusedDatesAndTitles(ss);
     // updateGradeScale(ss);
     // updateConditionalFormatting(ss); // doesn't work in this scope :(
@@ -212,13 +236,13 @@ function updateAllPortfolios() {
   
   var students = getStudents();
   for (var s = 0; s < students.length; s++) {
-    //if (s > 2) break;
+    if (s > 3) break;
     
     var student = students[s];
     console.log("%s %s", student.fullname, student.fileid); 
     var pf = SpreadsheetApp.openById(student.fileid);
     
-    //updatePortfolioAttributes(pf);
+    updatePortfolioAttributes(pf);
     updatePortfolioWrapExtraCurricular(pf);    
   }
 }

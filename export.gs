@@ -50,14 +50,16 @@ function exportAllRBs() {
     
     var rbId = rbIds[r];
     Logger.log(rbId);
+    var rbss = SpreadsheetApp.openById(rbId);
+    var rbName = rbss.getName();
+
     if (idsToExport.indexOf(rbId) == -1) {
-      console.info("Skipping %s", rbId);
+      console.info("Skipping %s", rbName);
       continue;
       
     } else {
       console.info("%s is ticked for export", rbId);
-      var rbss = SpreadsheetApp.openById(rbId);
-      var rbName = rbss.getName();
+
 
       exportStudentsFromRB(rbss, studentsToUpdate);
 
@@ -214,7 +216,6 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var owner = rbss.getOwner();
   var len = srcName.length;
   
-  // TODO FIXME subYear and tabName should come from Reportbooks tab
   var subYear = srcName.substring(0,5);
   var tabName = rbss.getSheetByName(top.SHEETS.OVERVIEW)
   .getRange(top.RANGES.OVERVIEWSUBJECT).getValue();

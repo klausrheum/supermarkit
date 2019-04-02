@@ -31,6 +31,14 @@ function flush() {
   SpreadsheetApp.flush();
 }
 
+function getRbRows() {
+  // get list of courses from rbTracker
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  
+  return getRows(rbSheet);
+}
+
 
 /**
  * Create RB docs for classrooms with empty rbID fields (Reportbooks tab) 
@@ -38,7 +46,7 @@ function flush() {
  * @return {array} list of created rbIds
  */
 function createMissingReportbooks() {
-  // get list of classrooms from rbTracker
+  // get list of courses from rbTracker
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
   
@@ -281,7 +289,7 @@ function fileExists(fileName, folderId) {
 
 
 /**
- * TODO extract code from updateReportbooks
+ * TODO extract code from updateReportbooks (in updaters.gs)
  * 
  * Copy SUBY00 template into teacherFolder 
  * Rename it to: Y2019 IB Mathematical Studies JK Jun2019 Reportbook
@@ -295,7 +303,7 @@ function createReportbook(courseId) {
 }
 
 /** 
- * TODO extract code from updateReportbooks
+ * TODO extract code from updateReportbooks (in updaters.gs)
  * 
  * Update class details (title, teacher, student list etc) from RB Tracker to RB
  * @param {string} courseId the Classroom id for this course

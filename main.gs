@@ -91,9 +91,8 @@ var top = {
     TABS: 9,
     GUARDIANEMAIL: 19,
     
-    // @KR unused?
-    // OVERVIEWSUBJECT: 10,
-    // OVERVIEWTEACHER: 11,
+    OVERVIEWSUBJECT: 10,
+    OVERVIEWTEACHER: 11,
     
     EMAILSTOEXPORT: 9,
 
@@ -185,7 +184,7 @@ var template = {
 function getRbIds() {
 
   var rawIds = SpreadsheetApp.openById(top.FILES.RBTRACKER)
-  .getSheetByName("Reportbooks")
+  .getSheetByName(top.SHEETS.REPORTBOOKS)
   .getRange(top.COLS.RBIDS).getValues();
   //Logger.log(raw_ids);
   

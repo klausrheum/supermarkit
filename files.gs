@@ -118,42 +118,77 @@ function copyReportbooksDataToTracker() {
 }
 
 
-function test_killSheets() {
-  var lisa = "1-L0dJ5d0ZE3QaVtR-6dTlAJVLVvc4cgWb_Twu5Zby-A"; 
+function TEST_keepKillSheets() {
+  console.log("TEST_keepKillSheets()");
+  
+  var lisa = "1sS-WJZI3uBvQCx396gQPJNoxok9i9OERAFm8OSqohqg"; 
   var ss = SpreadsheetApp.openById(lisa);
-  killSheets(ss, [/.*_backup/]);
+  keepKillSheets(ss, [/.*_backup/]); // incorrect parameters, should fail
+  keepKillSheets(ss, [/(Admin|Pastoral)/], [/.*/]); // incorrect parameters, should fail
+    console.log("END TEST_keepKillSheets()");
+
 }
 
-function killUnwantedPortfolioSheets() {
+function keepKillUnwantedPortfolioSheets() {
+    console.log("keepKillUnwantedPortfolioSheets()");
+
   var students = getStudents();
   for (var i=0; i<students.length; i++) {
     var ss = SpreadsheetApp.openById(students[i].fileid);
     console.warn("[%s] Checking for unwanted sheets to kill", students[i].fullname);
-    killSheets(ss, [/.*_backup/, /English L/, /English Li/]);
-    //if (i > 2) break;
+    //keepKkillSheets(ss, [/.*_backup/, /English L/, /English Li/]);
+    keepKillSheets(ss, [/(Admin|Pastoral)/], [/.*/]);
+    
+    if (i > 2) break;
+    
   }
+  console.log("END keepKillUnwantedPortfolioSheets()");
 }
 
-function killSheets(ss, killPatterns) {
-  if (killPatterns === undefined) {
-    return;
+function keepKillSheets(ss, keepPatterns, killPatterns) {
+  if (keepPatterns === undefined || killPatterns === undefined) {
+    console.error("keepKillSheets called with incorrect parameters - aborted");
+    return false;
   }
   
   var sheets = ss.getSheets();
-  // kill all the sheets we DON'T want any more
+  
+  // kill all the sheets we DON'T want, unless they match keepPatterns
   sheets.forEach(function (s, i) {
     var sheetName = s.getName();
+    var keep = false;
+    var kill = false; 
     
-    killPatterns.forEach(function (pattern, j) {
+    keepPatterns.forEach(function (pattern, j) {
       
       if(sheetName.match(pattern) ) {
-        ss.deleteSheet(s);  // UNCOMMENT THIS LINE TO USE
-        console.log ("[%s] '%s' found in sheetName '%s', killing", ss.getName(), pattern, sheetName);
+        keep = true;
+        console.log ("[%s] '%s' found in sheetName '%s', adding KEEP tag", ss.getName(), pattern, sheetName);
         
       } else {
-        // Logger.log ("'%s' not found in sheetName '%s', skipping", pattern, sheetName); 
+        console.log ("'%s' not found in sheetName '%s', no KEEP tag", pattern, sheetName); 
       }
     });
+    
+    if (! keep) {
+    
+      killPatterns.forEach(function (pattern, j) {
+        
+        if(sheetName.match(pattern) ) {
+          kill = true;
+          console.log ("'%s' found in sheetName '%s', adding KILL tag", pattern, sheetName); 
+        } else {
+          console.log ("'%s' not found in sheetName '%s', no KILL tag", pattern, sheetName); 
+        }
+        
+      });
+    }
+    
+    if (kill && ! keep) {
+      ss.deleteSheet(s);  // (UN) COMMENT THIS LINE TO (USE) TEST
+      console.warn ("[%s] sheetName '%s', tagged KILL and not KEEP: killing", ss.getName(), sheetName);
+    }
+    
   });
 }
 
