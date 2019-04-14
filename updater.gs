@@ -51,7 +51,7 @@ function updateReportbooks() {
     
     if (updateMeta) {
       // FIXME: Need to pull subjectName, teacherName from Reportbooks tab
-      // updateReportbookMetadata(id, subjectName, teacherName);
+      updateReportbookMetadata(id, rbSubject, rbTeacher);
     }
     
     //    updateCommentsColumn(ss);
@@ -469,3 +469,4 @@ function exportButton() {
   // sheet = "Individual report";
   // sheet.copyTo(name, B4:X11
 }
+

@@ -2,8 +2,13 @@
 
 === Steps to generate a report ===
 
+# TIPS
+Open the Stackdriver Logger to view what's happening when you run scripts:
+https://console.cloud.google.com/logs/viewer?project=project-id-1083006695369336274
+
 # PREPARATION - Before you begin
 Duplicate RB Tracker, clear out Reportbooks, Portfolios, Teachers & Problems tabs
+
 main.gs - update top.META.SEM, top.FILES.RBTRACKER
 
 # REPORTBOOKS - Teacher gradebooks, used to generate Portfolios
@@ -15,11 +20,13 @@ export.gs > backupAllPastoralAdmin - copies Pastoral Comments, extracurricular &
 
 # PORTFOLIOS - Student pastoral & subject sheets, used to generate & email PDFs
 Copy & paste students & emails from teacher RBs (will be automated soon)
+
 updater.gs > updateAllPortfolios - wrap extra-curricular, merge attributes & set formula
 
 # EXPORT
 In Reportbooks tab, tick 'Export' against required subjects
 In Portfolios tab, tick 'Export' against required students
+
 export.gs > exportAllRBs - For all RBs ticked 'Export', create a portfolio tab for every student ticked Export'
 
 # GENERATE PDFS & Email to Guardians

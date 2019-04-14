@@ -12,6 +12,8 @@ var exportOverride = "ALL";
 function exportAllRBs() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   
+  var startTime = new Date(); 
+  console.warn("exportAllRBs: STARTED " + startTime );
 
   var idsToExport = getRbIdsToExport();
   console.log ("%s reportbooks tagged for export", idsToExport.length);
@@ -36,9 +38,6 @@ function exportAllRBs() {
   var spa12 = "11cztmZuO_8XZy6valpY-HbQr4S_qBXpbTi6lmdTxhVo";
   var cpe11 = "1lyxNjnINRMDZ7vY86L3HchdoGO_yZ724zBR-yFVV318";
   // var rbIds = [cpe11];
-  var startTime = new Date();
-  
-  console.warn("exportAllRBs: STARTED " + startTime );
   
   for (var r = 0; r<rbIds.length; r++) {
     
@@ -54,12 +53,11 @@ function exportAllRBs() {
     var rbName = rbss.getName();
 
     if (idsToExport.indexOf(rbId) == -1) {
-      console.info("Skipping %s", rbName);
+      console.log("Skipping %s", rbName);
       continue;
       
     } else {
       console.info("%s is ticked for export", rbId);
-
 
       exportStudentsFromRB(rbss, studentsToUpdate);
 
@@ -223,9 +221,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var sub = tabName;
   //var students = getStudents();
   
-  console.warn("[%s] >>> Checking for %s", subYear, owner);
-  
-  var gradeSheet = rbss.getSheetByName("Grades");
+  var gradeSheet = rbss.getSheetByName(top.SHEETS.GRADES);
   
   // TODO: v2 use these to update the portfolio directly?
   var titles = gradeSheet.getRange("A3:X3").getValues();
@@ -339,7 +335,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         // ... 2 or fewer grades ?
         if (rowScores.length <= 2) {
           console.info(
-            '[%s] FEW? %s grade(s) - %s',
+            '[%s] / %s grade(s) - %s',
             subYear, rowScores.length.toString(), rowFullname);
         }
 

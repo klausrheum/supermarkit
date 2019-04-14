@@ -77,7 +77,7 @@ var top = {
   COLS: {
     // Columns in REPORTBOOKS sheet
     RBIDS: "A2:A",
-    RBIDSTOEXPORT: 22,
+    RBIDSTOEXPORT: 23, // replace this with getRBRows
     
     // Columns in PORTFOLIOS Sheet
     LASTNAME: 1,
@@ -129,8 +129,6 @@ var top = {
 
 // change this with each new semester (or pick from a list?)
 top.FILES.RBTRACKER = top.FILES.rbJun2019;
-
-top.students = initialiseStudents();
 
 if (TESTING) {
   sheet = top.SHEETS.REPORTBOOKS = "Copy of Reportbooks";

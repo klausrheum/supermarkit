@@ -209,9 +209,15 @@ function getStudentByEmail(studentEmail) {
 function getStudents() {
   // students is now global for speed (!) 
   if (top.students !== undefined && top.students.length != 0) {
-    console.log("Skipping creation of students", top.students.length);
-    return top.students;
+    console.log("top.students already contains %s members", top.students.length);
+  } else {
+    top.students = initialiseStudents();
   }
+  if (top.students === undefined || top.students.length == 0) {
+    console.error("top.students is empty - BIG PROBLEM!");
+    throw "top.students is empty - BIG PROBLEM!";
+  }
+  return top.students;
 }
 
 function initialiseStudents() {
@@ -272,7 +278,9 @@ function getStudent(student) {
   // search RB Tracker for student.email:
   // return student or return student.row = -1
   
+  var students = getStudents();
   var studentFound = false;
+  
   for (var s=0; s < top.students.length; s++) {
     var thisStudent = top.students[s];
     if (thisStudent.email == student.email) {
