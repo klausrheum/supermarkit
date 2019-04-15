@@ -207,6 +207,9 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
 
+
+// https://developers.google.com/classroom/reference/rest/v1/courses.students/list?apix_params=%7B%22courseId%22%3A%2216052292479%22%2C%22fields%22%3A%22students(userId%2Cprofile.name.fullName%2Cprofile.name.givenName%2Cprofile.name.familyName%2Cprofile.emailAddress)%22%7D
+
 function listCourses(studentEmail) {
   var optionalArgs = {
     pageSize: 100,
@@ -289,41 +292,145 @@ function listGrades(courseId, studentEmail) {
 
 
 
+function TEST_replaceRbStudents() {
+  // The Klaus Room
+  var courseId = 24614491226; 
+  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  var courseStudents = listStudents(courseId);
+  replaceRbStudents(rbId, courseStudents);
+}
 
+function replaceRbStudents (rbId, courseStudents) {
+  // setup: remove any existing student data
+  clearRbStudents(rbId);
+  updateRbStudents(rbId, courseStudents);
+}
+
+function TEST_clearRbStudents() {
+  // The Klaus Room
+  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  clearRbStudents(rbId);  
+}
+
+function clearRbStudents(rbId) {
+  var ss = SpreadsheetApp.openById(rbId);
+  var sheet = ss.getSheetByName(top.SHEETS.GRADES);
+  sheet.getRange("A7:C46").clearContent();
+}
+
+function updateRbStudents(rbId, courseStudents) {
+  if (rbId == undefined || rbId.length < 10) {
+    return false;
+  }
+  
+  if (courseStudents == undefined || courseStudents.length < 1) {
+    return false;
+  }
+  
+  var ss = SpreadsheetApp.openById(rbId);
+  Logger.log ("Opening " + ss.getName());
+  Logger.log ("Adding students");
+  //Logger.log (courseStudents);
+  var sheet = ss.getSheetByName(top.SHEETS.GRADES);
+  var maxRows = sheet.getMaxRows();
+  Logger.log("maxRows: " + maxRows);
+  
+  var startRow = 7;
+  for (var i = 0; i < courseStudents.length; i++) {
+    var values = [
+      [
+        courseStudents[i].familyName, 
+        courseStudents[i].givenName, 
+        courseStudents[i].emailAddress
+      ]];
+    Logger.log(values);
+    var row = startRow + i;
+    sheet.getRange(row, 1, 1, 3).setValues(values);
+    sheet.getRange(row, 4, 1, 1).setFormula('=B' + row + ' & " " & A' + row );
+  }
+  var sortSpecObj = [{column: 1, ascending: true}, {column: 2, ascending: true}];
+  sheet.getRange(startRow, 1, maxRows-startRow-1, 3).sort(sortSpecObj);
+  
+  return courseStudents;
+}
 
 // classroom.courses.courseWork.studentSubmissions.list
 // 16063195662
 
-var courseId = 16052292479;
-var courseWorkId = 16052292479;
-mrkershaw = 107554112463094781867;
+function TEST_listStudents() {
+  var courseId = 16052292479;
+  var courseWorkId = 16052292479;
+  var mrkershaw = 107554112463094781867;
+  var y6 = listStudents(courseId);
+  Logger.log(y6);
+}
 
-
-function listAllStudents() {
+function listStudents(courseId) {
   var optionalArgs = {
     // pageSize: 10
+    fields:"students(userId,profile.name.fullName,profile.name.givenName,profile.name.familyName,profile.emailAddress)"
   };
   var responses = Classroom.Courses.Students.list(courseId).students;
   //var courses = response.courses;
   Logger.log('responses = %s', responses.length);
   // Logger.log('responses = %s', responses);
-
+  
+  var courseStudents = [];
+  
   if (responses && responses.length > 0) {
     for (i = 0; i < responses.length; i++) {
       var response = responses[i];
-      Logger.log('%s %s (%s)', i, response.profile.name.fullName, response.profile.emailAddress);
+      // Logger.log('%s %s (%s)', i, response.profile.name.fullName, response.profile.emailAddress);
+      
+      if (response.profile.emailAddress != undefined) {
+        //Logger.log(response);
+        courseStudents.push({
+          "userId": response.userId, 
+          "emailAddress": response.profile.emailAddress,
+          "fullName": response.profile.name.fullName,
+          "givenName": response.profile.name.givenName,
+          "familyName": response.profile.name.familyName
+        });
+      }
     }
   } else {
     Logger.log('No matches found.');
   }
+  
+  return courseStudents;
 }
 
 /*
-  'https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE&studentId=tom.kershaw%40students.hope.edu.kh&fields=courses(id%2Cname%2CguardiansEnabled%2CownerId%2CalternateLink)' \
+fields:students(userId,profile.name.fullName,profile.name.givenName,profile.name.familyName,profile.emailAddress)
 
-https://developers.google.com/classroom/reference/rest/v1/courses/list?apix=true
-// get student's acrive courses by id
-      "courseStates": [
+{
+  "students": [
+    {
+      "courseId": "16052292479",
+      "userId": "109441503280302149020",
+      "profile": {
+        "id": "109441503280302149020",
+        "name": {
+          "givenName": "Tanyaradzwa",
+          "familyName": "Hungwe",
+          "fullName": "Tanyaradzwa Hungwe"
+        },
+        "emailAddress": "tanyaradzwa.hungwe@students.hope.edu.kh",
+        "photoUrl": "//lh3.googleusercontent.com/a-/AAuE7mC-d4wzYIvLdp1VbjbqDvuEMFmBjWkvjI1GggVG"
+      }
+    },
+    {
+      "courseId": "16052292479",
+      "userId": "117219793083402379130",
+      ...    
+*/
+
+/*
+  https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE&studentId=tom.kershaw%40students.hope.edu.kh&fields=courses(id%2Cname%2CguardiansEnabled%2CownerId%2CalternateLink)
+  https://developers.google.com/classroom/reference/rest/v1/courses/list?apix=true
+
+// get student's active courses by id
+"courseStates": [
         "ACTIVE"
       ],
       "studentId": "tom.kershaw@students.hope.edu.kh",
