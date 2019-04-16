@@ -59,7 +59,7 @@ function createMissingReportbooks() {
     Logger.log(rbRow.courseName);
     
     // ESCAPE ROUTE - only do the first two rows
-    // if (r >= 2) break;
+    // if (row >= 2) break;
     
     if (rbRow.Sync) {
       
@@ -190,14 +190,14 @@ function emptyStr(element) {
 }
 
 function hasComments(rbId) {
-  var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
-  var comments = sheet.getRange("Y7:Y").getValues();
-  //Logger.log(comments.length);
-  var answer = comments.some(emptyStr); 
-  //Logger.log(answer);
-  return answer;
+  return hasValues(rbId, top.SHEETS.GRADES, "Y7:Y");
 }
 
+function hasValues(ss, sheetName, range) {
+  var sheet = SpreadsheetApp.openById(ss).getSheetByName(sheetName);
+  var values = sheet.getRange(range).getValues();
+  return values.some(emptyStr);
+}
 
 function TEST_updateRbStudents() {
   // The Klaus Room
@@ -211,6 +211,38 @@ function TEST_updateRbStudents() {
   };
 }
 
+
+function updateAllRbStudents () {
+  var startTime = new Date(); 
+  console.warn("updateAllRbStudents: STARTED " + startTime );
+
+  // get list of courses from rbTracker
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  
+  var rbRows = getRows(rbSheet);
+  
+  var errors = [];
+  for (var row = 0; row < rbRows.length; row++) {
+    var rbRow = rbRows[row];
+    
+    Logger.log(rbRow.courseName);
+    
+    // ESCAPE ROUTE - only do the first two rows
+    // if (row >= 2) break;
+    
+    var courseName = rbRow.courseName;
+    console.info("updateRbStudents: " + courseName);
+    var courseStudents = listStudents(rbRow.courseId);
+    updateRbStudents(rbRow.rbId, courseStudents);
+  }
+  var endTime = new Date();
+  var elapsedTime = (endTime - startTime)/1000;
+  
+  console.warn("updateAllRbStudents: COMPLETED %s in %s secs", endTime, elapsedTime);
+
+}
+
 function updateRbStudents(rbId, courseStudents) {
   if (rbId == undefined || rbId.length < 10) {
     return false;
@@ -219,14 +251,22 @@ function updateRbStudents(rbId, courseStudents) {
   if (courseStudents == undefined || courseStudents.length < 1) {
     return false;
   }
-  
-  if (hasComments(rbId)) {
-    throw "ERROR: Reportbook already has comments in column Y, cannot update students.";
-//    return false;
+    
+  // check no comments are already in
+  if ( hasValues(rbId, top.SHEETS.GRADES, "Y7:Y") ) {
+    // throw "ERROR: Reportbook already has comments in column Y, cannot update students.";
+    console.warn("Reportbook already has comments in column Y, skipping.");
+    return false;
+  }
+
+  // check no students are already in
+  if ( hasValues(rbId, top.SHEETS.GRADES, "A7:A") ) {
+    console.warn("Reportbook already has students in column A, skipping.");
+    return false;
   }
   
   var ss = SpreadsheetApp.openById(rbId);
-  //Logger.log ("Opening " + ss.getName());
+  console.info ("Adding students to " + ss.getName());
   //Logger.log ("Adding students");
   //Logger.log (courseStudents);
   var sheet = ss.getSheetByName(top.SHEETS.GRADES);
@@ -247,7 +287,7 @@ function updateRbStudents(rbId, courseStudents) {
     
     // fullName formula
     var formula = '=B{0} & " " & A{0}'.format(row);
-    sheet.getRange(row, 4, 1, 1).setFormula(formula);
+    sheet.getRange(row, 4, 1, 1).setFormula(formula).setVerticalAlignment("middle");
 
     // GPA formula
     var formula = '=G{0} / 0.25'.format(row);
