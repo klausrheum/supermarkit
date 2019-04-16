@@ -291,69 +291,6 @@ function listGrades(courseId, studentEmail) {
 }
 
 
-
-function TEST_replaceRbStudents() {
-  // The Klaus Room
-  var courseId = 24614491226; 
-  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
-  var courseStudents = listStudents(courseId);
-  replaceRbStudents(rbId, courseStudents);
-}
-
-function replaceRbStudents (rbId, courseStudents) {
-  // setup: remove any existing student data
-  clearRbStudents(rbId);
-  updateRbStudents(rbId, courseStudents);
-}
-
-function TEST_clearRbStudents() {
-  // The Klaus Room
-  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
-  clearRbStudents(rbId);  
-}
-
-function clearRbStudents(rbId) {
-  var ss = SpreadsheetApp.openById(rbId);
-  var sheet = ss.getSheetByName(top.SHEETS.GRADES);
-  sheet.getRange("A7:C46").clearContent();
-}
-
-function updateRbStudents(rbId, courseStudents) {
-  if (rbId == undefined || rbId.length < 10) {
-    return false;
-  }
-  
-  if (courseStudents == undefined || courseStudents.length < 1) {
-    return false;
-  }
-  
-  var ss = SpreadsheetApp.openById(rbId);
-  Logger.log ("Opening " + ss.getName());
-  Logger.log ("Adding students");
-  //Logger.log (courseStudents);
-  var sheet = ss.getSheetByName(top.SHEETS.GRADES);
-  var maxRows = sheet.getMaxRows();
-  Logger.log("maxRows: " + maxRows);
-  
-  var startRow = 7;
-  for (var i = 0; i < courseStudents.length; i++) {
-    var values = [
-      [
-        courseStudents[i].familyName, 
-        courseStudents[i].givenName, 
-        courseStudents[i].emailAddress
-      ]];
-    Logger.log(values);
-    var row = startRow + i;
-    sheet.getRange(row, 1, 1, 3).setValues(values);
-    sheet.getRange(row, 4, 1, 1).setFormula('=B' + row + ' & " " & A' + row );
-  }
-  var sortSpecObj = [{column: 1, ascending: true}, {column: 2, ascending: true}];
-  sheet.getRange(startRow, 1, maxRows-startRow-1, 3).sort(sortSpecObj);
-  
-  return courseStudents;
-}
-
 // classroom.courses.courseWork.studentSubmissions.list
 // 16063195662
 

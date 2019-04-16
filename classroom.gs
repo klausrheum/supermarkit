@@ -134,6 +134,159 @@ function updateReportbookMetadata(rbFileId, subjectName, teacherName) {
   Logger.log("Updated reportbook metadata: ");
 }
 
+
+/*
+
+Pull students from Classroom Courses into RBs
+
+*/
+
+function TEST_replaceRbStudents() {
+  // The Klaus Room
+  var courseId = 24614491226; 
+  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  var courseStudents = listStudents(courseId);
+  replaceRbStudents(rbId, courseStudents);
+}
+
+function replaceRbStudents (rbId, courseStudents) {
+  // setup: remove any existing student data
+  clearRbStudents(rbId);
+  updateRbStudents(rbId, courseStudents);
+}
+
+function TEST_clearRbStudents() {
+  // The Klaus Room
+  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  clearRbStudents(rbId);  
+}
+
+function clearRbStudents(rbId) {
+  var ss = SpreadsheetApp.openById(rbId);
+  var sheet = ss.getSheetByName(top.SHEETS.GRADES);
+  sheet.getRange("A7:C46").clearContent();
+}
+
+function TEST_hasComments() {
+  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
+  
+  sheet.getRange("Y7:Y").setValue("");
+  if (hasComments(rbId) != false) {
+    throw "ERROR: The Klaus Room should have NO comments!";  
+  };
+  
+  sheet.getRange("Y20").setValue("This is a comment");
+  if (hasComments(rbId) != true) {
+    throw "ERROR: The Klaus Room should have comments!";  
+  };
+}
+
+function emptyStr(element) {
+  Logger.log(element);
+  var notEmpty = element != ""; 
+  Logger.log(notEmpty);
+  return notEmpty;
+}
+
+function hasComments(rbId) {
+  var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
+  var comments = sheet.getRange("Y7:Y").getValues();
+  Logger.log(comments.length);
+  var answer = comments.some(emptyStr); 
+  Logger.log(answer);
+  return answer;
+}
+
+
+function TEST_updateRbStudents() {
+  // The Klaus Room
+  var courseId = 24614491226; 
+  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  var courseStudents = listStudents(courseId);
+  updateRbStudents(rbId, courseStudents);
+}
+
+function updateRbStudents(rbId, courseStudents) {
+  if (rbId == undefined || rbId.length < 10) {
+    return false;
+  }
+  
+  if (courseStudents == undefined || courseStudents.length < 1) {
+    return false;
+  }
+  
+  if (hasComments(rbId)) {
+    throw "ERROR: Reportbook already has comments in column Y, cannot update students.";
+//    return false;
+  }
+  
+  var ss = SpreadsheetApp.openById(rbId);
+  Logger.log ("Opening " + ss.getName());
+  Logger.log ("Adding students");
+  //Logger.log (courseStudents);
+  var sheet = ss.getSheetByName(top.SHEETS.GRADES);
+  var maxRows = sheet.getMaxRows();
+  Logger.log("maxRows: " + maxRows);
+  
+  var startRow = 7;
+  for (var i = 0; i < courseStudents.length; i++) {
+    var values = [
+      [
+        courseStudents[i].familyName, 
+        courseStudents[i].givenName, 
+        courseStudents[i].emailAddress
+      ]];
+    Logger.log(values);
+    var row = startRow + i;
+    sheet.getRange(row, 1, 1, 3).setValues(values);
+    
+    // fullName formula
+    var formula = '=B{0} & " " & A{0}'.format(row);
+    sheet.getRange(row, 4, 1, 1).setFormula(formula);
+
+    // GPA formula
+    var formula = '=G{0} / 0.25'.format(row);
+    sheet.getRange(row, 5, 1, 1).setFormula(formula);
+
+    // Grd formula
+    var formula = '=if(istext(A{0}), index(Grades, match($G{0}*100,GradeRange,-1), 1),"")'.format(row);
+    sheet.getRange(row, 6, 1, 1).setFormula(formula);
+    
+    var formula = '=sum(arrayformula(iferror(($H$1:$X$1 / sumif($H{0}:$X{0}, "<>", $H$1:$X$1)) * (H{0}:X{0} / $H$4:$X$4))))'.format(row);
+    sheet.getRange(row, 7, 1, 1).setFormula(formula);
+  }
+  
+  var sortSpecObj = [{column: 1, ascending: true}, {column: 2, ascending: true}];
+  sheet.getRange(startRow, 1, maxRows-startRow-1, 3).sort(sortSpecObj);
+  
+  return courseStudents;
+}
+
+
+function TEST_format() {
+  var greeting = "Hello {0}! Goodbye {0}".format('world');
+  Logger.log (greeting);
+}
+
+String.prototype.format = function() {
+  a = this;
+  var regex;
+  for (k in arguments) {
+    regex = new RegExp('\\{' + k + '\\}', 'g');
+    a = a.replace(regex, arguments[k])
+  }
+  return a
+}
+
+/*
+
+HELPER FUNCTIONS
+
+*/
+
+
+
 function TEST_fileFunctions() {
   TEST_fileExists();
   TEST_havePermission();
