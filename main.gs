@@ -309,7 +309,7 @@ function listStudents(courseId) {
   };
   var responses = Classroom.Courses.Students.list(courseId).students;
   //var courses = response.courses;
-  Logger.log('responses = %s', responses.length);
+  //Logger.log('responses = %s', responses.length);
   // Logger.log('responses = %s', responses);
   
   var courseStudents = [];

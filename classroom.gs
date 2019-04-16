@@ -183,18 +183,18 @@ function TEST_hasComments() {
 }
 
 function emptyStr(element) {
-  Logger.log(element);
+  //Logger.log(element);
   var notEmpty = element != ""; 
-  Logger.log(notEmpty);
+  //Logger.log(notEmpty);
   return notEmpty;
 }
 
 function hasComments(rbId) {
   var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
   var comments = sheet.getRange("Y7:Y").getValues();
-  Logger.log(comments.length);
+  //Logger.log(comments.length);
   var answer = comments.some(emptyStr); 
-  Logger.log(answer);
+  //Logger.log(answer);
   return answer;
 }
 
@@ -204,7 +204,11 @@ function TEST_updateRbStudents() {
   var courseId = 24614491226; 
   var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
   var courseStudents = listStudents(courseId);
-  updateRbStudents(rbId, courseStudents);
+  if ( updateRbStudents(rbId, courseStudents) ) {
+    Logger.log ("updateRbStudents completed successfully"); 
+  } else {
+    Logger.log ("updateRbStudents FAILED."); 
+  };
 }
 
 function updateRbStudents(rbId, courseStudents) {
@@ -222,12 +226,12 @@ function updateRbStudents(rbId, courseStudents) {
   }
   
   var ss = SpreadsheetApp.openById(rbId);
-  Logger.log ("Opening " + ss.getName());
-  Logger.log ("Adding students");
+  //Logger.log ("Opening " + ss.getName());
+  //Logger.log ("Adding students");
   //Logger.log (courseStudents);
   var sheet = ss.getSheetByName(top.SHEETS.GRADES);
   var maxRows = sheet.getMaxRows();
-  Logger.log("maxRows: " + maxRows);
+  //Logger.log("maxRows: " + maxRows);
   
   var startRow = 7;
   for (var i = 0; i < courseStudents.length; i++) {
@@ -237,7 +241,7 @@ function updateRbStudents(rbId, courseStudents) {
         courseStudents[i].givenName, 
         courseStudents[i].emailAddress
       ]];
-    Logger.log(values);
+    //Logger.log(values);
     var row = startRow + i;
     sheet.getRange(row, 1, 1, 3).setValues(values);
     
