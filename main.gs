@@ -237,7 +237,7 @@ function listCourses(studentEmail) {
 }
 
 
-function TEST_listCourseWork() {
+function TEST_listCourseWorks() {
   var courseId = "16059575101";
   var courseworks = listCourseWorks(courseId);
   Logger.log (courseworks);
@@ -246,9 +246,8 @@ function TEST_listCourseWork() {
 function listCourseWorks(courseId) {
   var optionalArgs = {
     pageSize: 100,
-    courseId: courseId,
     orderBy: "dueDate asc",
-    fields: "courseWork(id,title,dueDate,maxPoints,state,workType,alternateLink)"
+    fields: "courseWork(id,courseId,title,dueDate,maxPoints,state,workType,alternateLink)"
   }
   
   // courseWork(alternateLink,dueDate,id,maxPoints,state,title,workType),nextPageToken
@@ -268,12 +267,12 @@ function listCourseWorks(courseId) {
 function TEST_updateRbCwTitles() {
   // Y2024 ICT JKw
   var courseId = "16059575101";
-  var courseWorks = listCourseWorks(courseId);
   
   var titleRegex = / REP ?([0-9]*)%?/;
   var dueYear = 2019;
   var dueMonths = [1, 2, 3, 4, 5, 6];
   
+  var courseWorks = listCourseWorks(courseId);
   var filteredCourseWorks = filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths);
   
   var rbId = "1C2iC2I72JE5ooHuSr4XDXVoPo3TF3tKV7KP7LEVaKyQ";  
@@ -282,17 +281,22 @@ function TEST_updateRbCwTitles() {
 }
 
 function updateRbCwTitles(sheet, filteredCourseWorks) {
+  
+  var dateRow = 2
+  var titleRow = 3;
+  var maxPointsRow = 4;
+  var idRow = 5;
+  var averageRow = 6;
+
+  var emailStartRow = 7;
+  var studentEmails = sheet.getRange("C" + emailStartRow + ":C").getValues();
+  Logger.log (studentEmails);
+  
   var startCol = 8;
+
   for (var i = 0; i < filteredCourseWorks.length; i++) {
     
     var column = startCol + i;
-    
-    var dateRow = 2
-    var titleRow = 3;
-    var maxPointsRow = 4;
-    var idRow = 5;
-    var averageRow = 6;
-    
     var cw = filteredCourseWorks[i];
     
     // set date
@@ -318,6 +322,18 @@ function updateRbCwTitles(sheet, filteredCourseWorks) {
     var formula = '=iferror(average(indirect(address(row()+1, COLUMN()) & ":" & address(row()+40, column()))))';
     sheet.getRange(averageRow, column)
     .setFormula(formula);
+    
+    // loop through student emails
+    for (var j = 0; j < studentEmails.length; j++) {
+      Logger.log(j);
+      var studentEmail = studentEmails[j][0];
+      if (studentEmail) {
+        var grade = listGrades(studentEmail, cw.courseId, cw.id)[0];
+        if (grade.assignedGrade) {
+          sheet.getRange(emailStartRow + j, column).setValue(grade.assignedGrade); 
+        }
+      }
+    }
   }
 }
 
@@ -351,16 +367,31 @@ function filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths) {
     }
   }
   
-  return filteredCourseWorks;   
+  return filteredCourseWorks;
 }
 
 function TEST_listGrades() {
-  var studentId = "tom.kershaw@students.hope.edu.kh";
-  var courseId = "16063195662";
-  listGrades(courseId, studentId);
+  
+  // list all grades for this course for ONE student
+  var studentEmail = "tom.kershaw@students.hope.edu.kh";
+  var courseId = "16063195662"; // Y2022 CS
+  listGrades(studentEmail, courseId);
+
+  // list single grade for specific assignment for ONE student 
+  var studentEmail = "thomas.norman@students.hope.edu.kh";
+  var courseId = "16059575101"; // Y2024 ICT
+  var courseWorkId = "32765561263"; // "title": "Event Programming 8-23 REP"
+  listGrades(studentEmail, courseId, courseWorkId);
+
+  // list ALL grades for specific assignment for ALL students 
+  var studentEmail = "thomas.norman@students.hope.edu.kh";
+  var courseId = "16059575101"; // Y2024 ICT
+  var courseWorkId = "32765561263"; // "title": "Event Programming 8-23 REP"
+  listGrades("", courseId, courseWorkId);
+    
 }
 
-function listGrades(courseId, studentEmail) {
+function listGrades(studentEmail, courseId, courseWorkId) {
 //  "courseWorkId": "-",
 //      "states": [
 //        "RETURNED"
@@ -368,23 +399,35 @@ function listGrades(courseId, studentEmail) {
 //      "userId": "tom.kershaw@students.hope.edu.kh",
 //      "fields": "studentSubmissions(courseWorkId,assignedGrade)"
 
+  if (! courseId) {
+    return false;
+  }
+  
+  if (! studentEmail) {
+    var studentEmail = "";
+  }
+  
+  if (! courseWorkId) {
+    var courseWorkId = "-";
+  }
+  
   var optionalArgs = {
     pageSize: 100,
-    states: "RETURNED",
     userId: studentEmail,
     fields: "studentSubmissions(courseWorkId,assignedGrade)",
   };
-  var courseWorkId = "-";
   
-  Logger.log('%s %s', courseId, courseWorkId);
-  var response = Classroom.Courses.CourseWork.StudentSubmissions.list(16063195662, "-");
+  Logger.log('email: %s, courseId: %s, cwId: %s', studentEmail, courseId, courseWorkId);
   
   var response = Classroom.Courses.CourseWork.StudentSubmissions.list(courseId, courseWorkId, optionalArgs);
   var grades = response.studentSubmissions;
   var token = response.nextPageToken;
   
+  
   Logger.log('grades.length = %s', grades.length);
   Logger.log('grades = %s', grades);
+
+  if (grades.length = 1) return grades;
    
   //  RESULT: grades = [
 //    {assignedGrade=100, courseWorkId=17017362948}, 
