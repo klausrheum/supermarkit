@@ -248,7 +248,7 @@ function listCourseWorks(courseId) {
     pageSize: 100,
     courseId: courseId,
     orderBy: "dueDate asc",
-    fields: "courseWork(id,title,dueDate,maxPoints,state,workType)" // ,alternateLink
+    fields: "courseWork(id,title,dueDate,maxPoints,state,workType,alternateLink)"
   }
   
   // courseWork(alternateLink,dueDate,id,maxPoints,state,title,workType),nextPageToken
@@ -290,6 +290,7 @@ function updateRbCwTitles(sheet, filteredCourseWorks) {
     var dateRow = 2
     var titleRow = 3;
     var maxPointsRow = 4;
+    var idRow = 5;
     
     var cw = filteredCourseWorks[i];
     
@@ -300,12 +301,17 @@ function updateRbCwTitles(sheet, filteredCourseWorks) {
     
     // set title
     sheet.getRange(titleRow, column)
-    .setValue(cw.title)
-    .setNote(cw.id);
+    .setFormula('=HYPERLINK("' + cw.alternateLink + '", "' + cw.title + '")' )
+    .clearNote();
+    //.setNote(cw.id);
     
     // set max points
     sheet.getRange(maxPointsRow, column)
     .setValue(cw.maxPoints);
+
+    // set id as note in 'black' row
+    sheet.getRange(idRow, column)
+    .setNote(cw.id);
   }
 }
 
