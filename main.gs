@@ -291,6 +291,7 @@ function updateRbCwTitles(sheet, filteredCourseWorks) {
     var titleRow = 3;
     var maxPointsRow = 4;
     var idRow = 5;
+    var averageRow = 6;
     
     var cw = filteredCourseWorks[i];
     
@@ -312,6 +313,11 @@ function updateRbCwTitles(sheet, filteredCourseWorks) {
     // set id as note in 'black' row
     sheet.getRange(idRow, column)
     .setNote(cw.id);
+    
+    // set average formula
+    var formula = '=iferror(average(indirect(address(row()+1, COLUMN()) & ":" & address(row()+40, column()))))';
+    sheet.getRange(averageRow, column)
+    .setFormula(formula);
   }
 }
 
