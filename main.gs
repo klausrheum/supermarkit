@@ -266,34 +266,62 @@ function listCourseWorks(courseId) {
 
 function TEST_updateRbCwTitles() {
   // Y2024 ICT JKw
+  var rbId = "1C2iC2I72JE5ooHuSr4XDXVoPo3TF3tKV7KP7LEVaKyQ";  
   var courseId = "16059575101";
   
+  // Y2025 ICT JKw
+  var rbId = "1BijeGY49S0amD3u-eePjz8iWBwH1sEc7QE_yADzVzgQ";  
+  var courseId = "16052292479";
+  
+  updateRbCwTitles(rbId, courseId);
+}
+
+function TEST_getEmailIds() {
+  var courseId = "16059575101";
+  var emailIds = getEmailIds(courseId);
+  Logger.log(emailIds);
+}
+
+function getEmailIds(courseId) {
+  var courseStudents = listStudents(courseId);
+  var emailIds = {};
+  for (var i = 0; i < courseStudents.length; i++) {
+    //Logger.log(courseStudents[i]);
+    // {emailAddress=amy.piper@students.hope.edu.kh, givenName=Amy, familyName=Piper, fullName=Amy Piper, userId=111296958067356506259}
+    var email = courseStudents[i].emailAddress;
+    var userId = courseStudents[i].userId;
+    //Logger.log(email + ": " + userId);
+    emailIds[email] = userId; 
+  }
+  return emailIds;
+}
+
+function updateRbCwTitles(rbId, courseId) {
+
   var titleRegex = / REP ?([0-9]*)%?/;
   var dueYear = 2019;
   var dueMonths = [1, 2, 3, 4, 5, 6];
-  
-  var courseWorks = listCourseWorks(courseId);
-  var filteredCourseWorks = filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths);
-  
-  var rbId = "1C2iC2I72JE5ooHuSr4XDXVoPo3TF3tKV7KP7LEVaKyQ";  
-  var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
-  updateRbCwTitles(sheet, filteredCourseWorks);
-}
 
-function updateRbCwTitles(sheet, filteredCourseWorks) {
+  var courseWorks = listCourseWorks(courseId);
+  var filteredCourseWorks = filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths);  
+  
+  var emailIds = getEmailIds(courseId);
+  
+  var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
+  var emailStartRow = 7;
+  var studentEmails = sheet.getRange("C" + emailStartRow + ":C").getValues();
+  // Logger.log (studentEmails);
+
+  var startCol = 8;
   
   var dateRow = 2
   var titleRow = 3;
   var maxPointsRow = 4;
   var idRow = 5;
   var averageRow = 6;
-
-  var emailStartRow = 7;
-  var studentEmails = sheet.getRange("C" + emailStartRow + ":C").getValues();
-  Logger.log (studentEmails);
   
-  var startCol = 8;
-
+  sheet.getRange("H2:V46").clearContent().setHorizontalAlignment("right");
+  
   for (var i = 0; i < filteredCourseWorks.length; i++) {
     
     var column = startCol + i;
@@ -324,17 +352,46 @@ function updateRbCwTitles(sheet, filteredCourseWorks) {
     .setFormula(formula);
     
     // loop through student emails
+    var grades = getUserIdGrades(cw.courseId, cw.id); // get grades for ALL students
+    
+    Logger.log(grades);
     for (var j = 0; j < studentEmails.length; j++) {
       Logger.log(j);
       var studentEmail = studentEmails[j][0];
       if (studentEmail) {
-        var grade = listGrades(studentEmail, cw.courseId, cw.id)[0];
-        if (grade.assignedGrade) {
-          sheet.getRange(emailStartRow + j, column).setValue(grade.assignedGrade); 
+        var grade = grades[emailIds[studentEmail]];
+        if (grade == undefined) {
+          grade = "";
         }
+        sheet.getRange(emailStartRow + j, column).setValue(grade);
       }
     }
   }
+}
+
+function TEST_getUserIdGrades() {
+  var courseId = "16059575101"; // Y2024 ICT
+  var courseWorkId = "32765561263"; // "title": "Event Programming 8-23 REP"
+  var userIdGrades = getUserIdGrades(courseId, courseWorkId);
+  Logger.log(userIdGrades);
+}
+
+function getUserIdGrades(courseId, courseWorkId) {
+  if (! courseId || ! courseWorkId) return {};
+  
+  var rawGrades = listGrades("", courseId, courseWorkId);
+  Logger.log("rawGrades=" + rawGrades);
+  
+  var userIdGrades = {};
+  for (var i = 0; i < rawGrades.length; i++) {
+    Logger.log(rawGrades[i]);
+    // {emailAddress=amy.piper@students.hope.edu.kh, givenName=Amy, familyName=Piper, fullName=Amy Piper, userId=111296958067356506259}
+    var userId = rawGrades[i].userId;
+    var assignedGrade = rawGrades[i].assignedGrade;
+    Logger.log(i + " " + userId + ": " + assignedGrade);
+    userIdGrades[userId] = assignedGrade; 
+  }
+  return userIdGrades;
 }
 
 function TEST_filterCourseWorks() {
@@ -414,38 +471,19 @@ function listGrades(studentEmail, courseId, courseWorkId) {
   var optionalArgs = {
     pageSize: 100,
     userId: studentEmail,
-    fields: "studentSubmissions(courseWorkId,assignedGrade)",
+    fields: "studentSubmissions(courseId,courseWorkId,assignedGrade,userId)",
   };
   
-  Logger.log('email: %s, courseId: %s, cwId: %s', studentEmail, courseId, courseWorkId);
+  //Logger.log('email: %s, courseId: %s, cwId: %s', studentEmail, courseId, courseWorkId);
   
   var response = Classroom.Courses.CourseWork.StudentSubmissions.list(courseId, courseWorkId, optionalArgs);
   var grades = response.studentSubmissions;
   var token = response.nextPageToken;
   
-  
-  Logger.log('grades.length = %s', grades.length);
-  Logger.log('grades = %s', grades);
+  //Logger.log('grades.length = %s', grades.length);
+  //Logger.log('grades = %s', grades);
 
-  if (grades.length = 1) return grades;
-   
-  //  RESULT: grades = [
-//    {assignedGrade=100, courseWorkId=17017362948}, 
-//     {assignedGrade=20, courseWorkId=16576592952}, 
-//     {courseWorkId=16351918886}, 
-//     {assignedGrade=9, courseWorkId=16063873810}
-//     ]
-
-
-  if (grades && grades.length > 0) {
-    for (i = 0; i < grades.length; i++) {
-      var grade = grades[i];
-      var score = typeof grade.assignedGrade === "undefined" ? "has not yet been marked." : "scored " + parseInt(grade.assignedGrade);
-      Logger.log('%s assignment %s %s', studentEmail, grade.courseWorkId, score);
-    }
-  } else {
-    Logger.log('No courses found.');
-  }
+  return grades;
 }
 
 
