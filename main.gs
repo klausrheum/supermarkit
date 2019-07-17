@@ -1,4 +1,16 @@
+/*
+1. Create a copy of the Reportbooks Tracker
+2. Copy its ID
+3. Create a new line in top.FILES, eg rbWhatever
+4. Update top.META.SEM to match (without the rb)
+
 var TESTING = false; // false/true
+
+function TESTtop() { 
+  var ss = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  Logger.log(ss.getName());
+  
+}
 
 // main.gs ===================================================
 // holds global objects for various doc IDs, eventually these 
@@ -32,13 +44,14 @@ var top = {
   // DELETE? "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
   META: {
-    "SEM": "Jun2019"  
+    "SEM": "Dec2019"  
   },
   
   FILES: {
     // reportbook trackers in semester order: rb(Dec|Jun)\d{4}
     "rbDec2018": "1D3OEcKrRIWpJmopP07u-KWh6sQHae2Q3dSTzo6uMFVc",
     "rbJun2019": "1JSJDpMOWQ766EDZjlKz_d2pxzNTNe_NT15JiI3WMuQE",
+    "rbDec2019": "1gajYqRDtQaYgknbkFtWkPBjhnJXOhe3Lc2cP8X--F8c",
     
     // will become whichever is current
     "RBTRACKER": "",
@@ -129,7 +142,8 @@ var top = {
 };
 
 // change this with each new semester (or pick from a list?)
-top.FILES.RBTRACKER = top.FILES.rbJun2019;
+top.FILES.RBTRACKER = top.FILES['rb'+top.META.SEM];
+
 
 if (TESTING) {
   sheet = top.SHEETS.REPORTBOOKS = "Copy of Reportbooks";
