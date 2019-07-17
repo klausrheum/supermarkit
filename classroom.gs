@@ -707,23 +707,29 @@ function getTeachersFromCourse(courseId) {
 }
 
 
+function TEST_getCoursesFromClassroom() {
+  var testTeacher = "17444398597"; // must be string
+  var response = getCoursesFromClassroom( "john.kershaw@hope.edu.kh" );
+  Logger.log ( response );
+}
+
 function getCoursesFromClassroom(teacherId) {
   // teacherId can be ""
   // TODO Use nextPageToken as pageToken to pull next page (!)
   var iterations = 0;
   var courses = [];
-  var misnamedCourses = [];
+  var archivedCourses = [];
   
   var optionalArgs = {
     pageSize: 50,
     teacherId: teacherId,
     // NO SPACES!
-    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId,courses.teacherFolder.id",
+    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId,courses.teacherFolder.id,courses.courseState",
     pageToken: ""
   };
   
   var finished = false;
-  while (! finished && iterations < 200) { // 4000 courses is more than we have!
+  while (! finished && iterations < 2000) { // 2000 courses is more than we have!
     iterations ++;
     var response = Classroom.Courses.list(optionalArgs);
     var rCourses = response.courses;
@@ -733,14 +739,14 @@ function getCoursesFromClassroom(teacherId) {
         
         var course = rCourses[i];
         // Logger.log('%s', course.name.slice(0,3));
-        if (course.name.slice(0,3) == "Y20" && course.name.indexOf("Pastoral") == -1) {
+        if (course.courseState == "ACTIVE" && course.name.indexOf("Pastoral") == -1) {
           courses.push(course);
-          console.log("Adding course: " + course);
+          console.log("ACTIVE course found: " + course);
         } else {
-          console.log("Invalid course name: %s", course.name); 
-          misnamedCourses.push(course);
+          console.log("NON-ACTIVE course found: %s", course.name); 
+          archivedCourses.push(course);
         }
-        console.log("Now I have %s good courses and %s misnamed courses", courses.length, misnamedCourses.length);
+        console.log("Now I have %s good courses and %s archived courses", courses.length, archivedCourses.length);
 
         
         //Logger.log('%s %s', i, course);
@@ -755,10 +761,10 @@ function getCoursesFromClassroom(teacherId) {
     } else {
       optionalArgs.pageToken = nextPageToken; 
     }
-    console.info("After the %s request I have %s good courses and %s misnamed courses", iterations, courses.length, misnamedCourses.length);
+    console.info("After request #%s I have %s good courses and %s archived courses", iterations, courses.length, archivedCourses.length);
   }
-  console.log(courses.length, misnamedCourses.length);
-  return [courses, misnamedCourses];
+  console.log("Live courses: " + courses.length + ", archived courses: " + archivedCourses.length);
+  return [courses, archivedCourses];
 }
 
 function getStudentsFromClassroom() {

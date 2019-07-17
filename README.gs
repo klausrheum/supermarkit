@@ -1,5 +1,8 @@
 /*
 
+Requires the Reportbook and RB_templates spreadsheet.
+Connects to the klausrheum/reportbooks github project.
+
 === Steps to generate a report ===
 
 # TIPS
