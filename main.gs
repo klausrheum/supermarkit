@@ -3,6 +3,7 @@
 2. Copy its ID
 3. Create a new line in top.FILES, eg rbWhatever
 4. Update top.META.SEM to match (without the rb)
+*/
 
 var TESTING = false; // false/true
 
@@ -44,7 +45,7 @@ var top = {
   // DELETE? "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
   META: {
-    "SEM": "Dec2019"  
+    "SEM": "Dec2019"  // select a RB from list in FILES
   },
   
   FILES: {
@@ -52,7 +53,7 @@ var top = {
     "rbDec2018": "1D3OEcKrRIWpJmopP07u-KWh6sQHae2Q3dSTzo6uMFVc",
     "rbJun2019": "1JSJDpMOWQ766EDZjlKz_d2pxzNTNe_NT15JiI3WMuQE",
     "rbDec2019": "1gajYqRDtQaYgknbkFtWkPBjhnJXOhe3Lc2cP8X--F8c",
-    
+
     // will become whichever is current
     "RBTRACKER": "",
     
@@ -91,6 +92,13 @@ var top = {
   COLS: {
     // Columns in REPORTBOOKS sheet
     RBIDS: "A2:A",
+    RBID: 1,
+    COURSENAME: 2,
+    SECTION: 3,
+    CLASSROOMLINK: 4,
+    COURSEID: 5,
+    OWNERID: 6,
+    TEACHERFOLDER: 7,
     RBIDSTOEXPORT: 12, // replace this with getRBRows
     
     // Columns in PORTFOLIOS Sheet
@@ -123,7 +131,7 @@ var top = {
   
   RANGES: {
     // Reportbooks
-    COURSEIDS: "D:D",
+    COURSEIDS: "E:E",
     TEACHERIDS: "A:A",
     TEACHERINFO: "A:C",
     
@@ -142,7 +150,7 @@ var top = {
 };
 
 // change this with each new semester (or pick from a list?)
-top.FILES.RBTRACKER = top.FILES['rb'+top.META.SEM];
+top.FILES.RBTRACKER = top.FILES['rb' + top.META.SEM];
 
 
 if (TESTING) {
@@ -280,19 +288,19 @@ function listCourseWorks(courseId) {
 }
 
 function TEST_importGrades() {
-  // Y2024 ICT JKw
-  var rbId = "1C2iC2I72JE5ooHuSr4XDXVoPo3TF3tKV7KP7LEVaKyQ";  
-  var courseId = "16059575101";
+  // Y2026 CS JKw
+  var rbId = "1hTH0yXlUSopGEJ7r8I9K4hyGDieZpGdzuyQhB0m-frM";  
+  var courseId = "35753904788";
   
-  // Y2025 ICT 
-  var rbId = "1BijeGY49S0amD3u-eePjz8iWBwH1sEc7QE_yADzVzgQ";  
-  var courseId = "16052292479";
+//  // Y2025 ICT 
+//  var rbId = "1BijeGY49S0amD3u-eePjz8iWBwH1sEc7QE_yADzVzgQ";  
+//  var courseId = "16052292479";
   
   importGrades(rbId, courseId);
 }
 
 function TEST_getEmailIds() {
-  var courseId = "16059575101";
+  var courseId = "35753904788";
   var emailIds = getEmailIds(courseId);
   Logger.log(emailIds);
 }
@@ -314,9 +322,21 @@ function getEmailIds(courseId) {
 function importGrades(rbId, courseId) {
 
   var titleRegex = / REP ?([0-9]*)%?/;
-  var dueYear = 2019;
-  var dueMonths = [1, 2, 3, 4, 5, 6];
-
+  var dueYear = top.META.SEM.slice(-4); // 2019;
+  var dueMonth = top.META.SEM.slice(0,-4);
+  var dueMonths;
+  
+  if (dueMonth === "Jun") {
+    dueMonths = [1, 2, 3, 4, 5, 6];
+  } else if (dueMonth === "Dec") {
+   dueMonths = [7, 8, 9, 10, 11, 12];
+  } else {
+    var message = "Parsing top.META.SEM for dueMonth didn't match Dec or Jun. Fix in main.gs";
+    sendTheDeveloperTheError( message );
+    console.error ( message );
+    throw new Error(message);
+  }
+  
   var courseWorks = listCourseWorks(courseId);
   var filteredCourseWorks = filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths);  
   
@@ -415,7 +435,8 @@ function TEST_filterCourseWorks() {
   
   var titleRegex = / REP ?([0-9]*)%?/;
   var dueYear = 2019;
-  var dueMonths = [1, 2, 3, 4, 5, 6];
+//  var dueMonths = [1, 2, 3, 4, 5, 6];
+  var dueMonths = [7, 8, 9, 10, 11, 12];
   
   var courseWorks = filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths);
   Logger.log (courseWorks);

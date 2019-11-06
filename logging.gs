@@ -12,15 +12,15 @@ function sendTheDeveloperTheError(message){
 
 
 function logToSheet(message) {
-  var spreadsheet = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  var log = spreadsheet.getSheetByName("Log");
-  
   var date = new Date();
   var description = message;
   var email = Session.getActiveUser().getEmail();
   var rowContents = [date, email, description];
   
-  log.appendRow(rowContents);  
+  log.appendRow(rowContents); 
+
+  var spreadsheet = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var log = spreadsheet.getSheetByName("Log");
 }
 
 function logToDoc(message) {

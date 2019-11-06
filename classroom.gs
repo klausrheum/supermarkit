@@ -6,6 +6,114 @@
 * createMissingReportbooks - creates a reportbook from the template for each row in RB Tracker
 */
 
+function TEST_updateReportbookClassrooms() {
+  importClassrooms("john.kershaw@hope.edu.kh");
+}
+
+function updateReportbookClassrooms(teacherId) {
+  if (teacherId == undefined) {
+    teacherId = "";
+  }
+  
+  var coursesData = getCoursesFromClassroom(teacherId);
+  var goodCourses = coursesData[0];
+  goodCourses.sort();
+  var badCourses = coursesData[1];
+  badCourses.sort();
+  Logger.log("good: %s, bad: %s", goodCourses.length, badCourses.length);
+  
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  
+  var c, row, course;
+  var goodRowsStart, goodRowsEnd;
+  var badRowsStart, badRowsEnd;
+  
+  var startRow = 2;
+  goodRowsStart = startRow;
+  
+  /*
+  COLS: {
+    // Columns in REPORTBOOKS sheet
+
+    RBID: 1,
+    COURSENAME: 2,
+    SECTION: 3,
+    CLASSROOMLINK: 4,
+    COURSEID: 5,
+    OWNERID: 6,
+    TEACHERFOLDER: 7,
+  */
+  
+  // good courses
+  for (c = 0; c < goodCourses.length; c++) {
+    course = goodCourses[c];
+    //Logger.log(course);
+    row = startRow + c;
+    sheet.getRange(row, top.COLS.COURSENAME).setValue(course.name);
+    sheet.getRange(row, top.COLS.SECTION).setValue(course.section);
+    sheet.getRange(row, top.COLS.CLASSROOMLINK).setValue(course.alternateLink);
+    sheet.getRange(row, top.COLS.COURSEID).setValue(course.id);
+    sheet.getRange(row, top.COLS.OWNERID).setValue(course.ownerId);
+    if (course.teacherFolder != undefined && course.teacherFolder.id != undefined) {
+      sheet.getRange(row, top.COLS.TEACHERFOLDER).setValue(course.teacherFolder.id);
+    }
+  }
+  goodRowsEnd = row;
+  
+  sheet.getRange(goodRowsStart, 2, goodRowsEnd, 6)
+  .setFontWeight("normal")
+  .setFontColor("black");
+  
+  sheet.getRange(goodRowsEnd + 1, 2, 5, 4).setValue("");
+  
+  sheet.getRange(row + 3, 2)
+  .setValue("Old/bad/dead courses (not in reports)")
+  .setFontWeight("bold")
+  .setFontColor("#999999");
+  
+  // bad courses
+  startRow = row + 4;
+  badRowsStart = startRow;
+  
+  for (c = 0; c < badCourses.length; c++) {
+    course = badCourses[c];
+    //Logger.log(course);
+    row = startRow + c;
+    sheet.getRange(row, top.COLS.COURSENAME).setValue(course.name);
+    sheet.getRange(row, top.COLS.SECTION).setValue(course.section);
+    sheet.getRange(row, top.COLS.CLASSROOMLINK).setValue(course.alternateLink);
+    sheet.getRange(row, top.COLS.COURSEID).setValue(course.id);
+    sheet.getRange(row, top.COLS.OWNERID).setValue(course.ownerId);
+    if (course.teacherFolder != undefined && course.teacherFolder.id != undefined) {
+      sheet.getRange(row, top.COLS.TEACHERFOLDER).setValue(course.teacherFolder.id);
+    }
+
+  }
+  
+  badRowsEnd = row;
+  
+  sheet.getRange(badRowsEnd+1, 2, 20, 4).setValue("");
+  
+  sheet.getRange(badRowsStart, 2, badRowsEnd, 6)
+  .setFontWeight("normal")
+  .setFontColor("#999999");
+  
+  var rows = [[goodRowsStart, goodRowsEnd],
+              [badRowsStart, badRowsEnd]];
+  var START = 0, END = 1;
+  
+  SpreadsheetApp.flush();
+  
+  // sort rows
+  for (var goodBad = 0; goodBad < rows.length; goodBad ++) {
+    sheet.getRange(rows[goodBad][START], 2, rows[goodBad][END], 8)
+    .sort(
+      [{column: 8, ascending: true}, // teacher name, alpha 
+       {column: 2, ascending: true}  // courseName
+      ]);
+  }
+}
 
 
 
@@ -16,11 +124,13 @@
 * fields: nextPageToken,courses(name,id,ownerId)
 */
 
+
+
 /**
- * Explanation of function
- * @param {string} text The text you want logged
- * @return {number} the length of the debug string
- */
+* Explanation of function
+* @param {string} text The text you want logged
+* @return {number} the length of the debug string
+*/
 function debug(text) {
   var logText = "debug: " + text;
   Logger.log(logText);
@@ -41,10 +151,10 @@ function getRbRows() {
 
 
 /**
- * Create RB docs for classrooms with empty rbID fields (Reportbooks tab) 
- * @param {string} rbTrackerId
- * @return {array} list of created rbIds
- */
+* Create RB docs for classrooms with empty rbID fields (Reportbooks tab) 
+* @param {string} rbTrackerId
+* @return {array} list of created rbIds
+*/
 function createMissingReportbooks() {
   // get list of courses from rbTracker
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
@@ -113,7 +223,7 @@ function TEST_addEditor() {
 
 // Log the name of every file in the user's Drive.
 function addEditor(fileId, email) {
-   DriveApp.getFileById(fileId).addEditor(email);
+  DriveApp.getFileById(fileId).addEditor(email);
 }
 
 function TEST_updateReportbookMetadata() {
@@ -200,9 +310,10 @@ function hasValues(ss, sheetName, range) {
 }
 
 function TEST_updateRbStudents() {
-  // The Klaus Room
-  var courseId = 24614491226; 
-  var rbId = "1pSh-DXY34nCL6KeQFwWbo07MZ0Z4pYdNxQ1d4kJYIAs";
+  // Y2026 CS JKw
+  var rbId = "1hTH0yXlUSopGEJ7r8I9K4hyGDieZpGdzuyQhB0m-frM";  
+  var courseId = "35753904788";
+
   var courseStudents = listStudents(courseId);
   if ( updateRbStudents(rbId, courseStudents) ) {
     Logger.log ("updateRbStudents completed successfully"); 
@@ -215,7 +326,7 @@ function TEST_updateRbStudents() {
 function updateAllRbStudents () {
   var startTime = new Date(); 
   console.warn("updateAllRbStudents: STARTED " + startTime );
-
+  
   // get list of courses from rbTracker
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
@@ -240,7 +351,7 @@ function updateAllRbStudents () {
   var elapsedTime = (endTime - startTime)/1000;
   
   console.warn("updateAllRbStudents: COMPLETED %s in %s secs", endTime, elapsedTime);
-
+  
 }
 
 function updateRbStudents(rbId, courseStudents) {
@@ -251,14 +362,14 @@ function updateRbStudents(rbId, courseStudents) {
   if (courseStudents == undefined || courseStudents.length < 1) {
     return false;
   }
-    
+  
   // check no comments are already in
   if ( hasValues(rbId, top.SHEETS.GRADES, "Y7:Y") ) {
     // throw "ERROR: Reportbook already has comments in column Y, cannot update students.";
     console.warn("Reportbook already has comments in column Y, skipping.");
     return false;
   }
-
+  
   // check no students are already in
   if ( hasValues(rbId, top.SHEETS.GRADES, "A7:A") ) {
     console.warn("Reportbook already has students in column A, skipping.");
@@ -288,11 +399,11 @@ function updateRbStudents(rbId, courseStudents) {
     // fullName formula
     var formula = '=B{0} & " " & A{0}'.format(row);
     sheet.getRange(row, 4, 1, 1).setFormula(formula).setVerticalAlignment("middle");
-
+    
     // GPA formula
     var formula = '=G{0} / 0.25'.format(row);
     sheet.getRange(row, 5, 1, 1).setFormula(formula);
-
+    
     // Grd formula
     var formula = '=if(istext(A{0}), index(Grades, match($G{0}*100,GradeRange,-1), 1),"")'.format(row);
     sheet.getRange(row, 6, 1, 1).setFormula(formula);
@@ -309,38 +420,38 @@ function updateRbStudents(rbId, courseStudents) {
 
 
 /**
- * TODO extract code from updateReportbooks (in updaters.gs)
- * 
- * Copy SUBY00 template into teacherFolder 
- * Rename it to: Y2019 IB Mathematical Studies JK Jun2019 Reportbook
-   (title is from the current RB Tracker)
- *
- * @param {string} courseId the Classroom id for this course
- * @return {number} docId of the newly created Reportbook
- */
+* TODO extract code from updateReportbooks (in updaters.gs)
+* 
+* Copy SUBY00 template into teacherFolder 
+* Rename it to: Y2019 IB Mathematical Studies JK Jun2019 Reportbook
+(title is from the current RB Tracker)
+*
+* @param {string} courseId the Classroom id for this course
+* @return {number} docId of the newly created Reportbook
+*/
 function createReportbook(courseId) {
   
 }
 
 /** 
- * TODO extract code from updateReportbooks (in updaters.gs)
- * 
- * Update class details (title, teacher, student list etc) from RB Tracker to RB
- * @param {string} courseId the Classroom id for this course
- * @return {number} docId of the newly created Reportbook
- */
+* TODO extract code from updateReportbooks (in updaters.gs)
+* 
+* Update class details (title, teacher, student list etc) from RB Tracker to RB
+* @param {string} courseId the Classroom id for this course
+* @return {number} docId of the newly created Reportbook
+*/
 function updateReportbook(courseId) {
   
 }
 
 /**
- * Updates the 'Teachers' tab in the 'Reportbooks Tracker' SS
- */
+* Updates the 'Teachers' tab in the 'Reportbooks Tracker' SS
+*/
 function getTeachersFromTracker() {
- 
+  
   // https://developers.google.com/classroom/reference/rest/v1/courses.teachers/list?apix_params=%7B%22courseId%22%3A%2216063195662%22%2C%22fields%22%3A%22teachers(userId%2Cprofile.name.fullName%2Cprofile.emailAddress)%22%7D
   // teachers(userId,profile.name.fullName,profile.emailAddress)
-
+  
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   
   // get current list of teacher ids
@@ -358,28 +469,30 @@ function getTeachersFromTracker() {
   //    }
   //  }
   //Logger.log(teacherIds);
-
+  
   // get list of courses from Reportbooks sheet
   var rbSheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
   var courseIds = rbSheet.getRange(top.RANGES.COURSEIDS).getValues();
   if (courseIds[0][0] != "courseId") {
-    throw "Column D in Reportbooks sheet does not start with 'courseId' - CHECK & FIX IMMEDIATELY";
+    throw "Column " + top.RANGES.COURSEIDS + " in Reportbooks sheet must be headed 'courseId' - CHECK & FIX IMMEDIATELY";
   }
+  
+  Logger.log(courseIds); // 
   
   // get teachers from each rb course
   var teacherIds = [];
-
+  
   var newTeachers = [["id", "fullName", "email"]]; // header row
   for (var c = 1; c < courseIds.length; c++) { // skip header row
     var courseId = courseIds[c][0];
-    // Logger.log(courseId);
-    if (courseId == "") break;
-    if (Number.isNaN(courseId)) continue;
+    console.log(courseId); //
+    if (courseId == "") continue; // skip blank lines
+    if (isNaN(courseId)) continue;
     
     // teachers: {userId, fullName, email}
     var teachers = getTeachersFromCourse(courseId);
     
-    // Logger.log("courseId: %s, teachers: %s", courseId, teachers);
+    Logger.log("courseId: %s, teachers: %s", courseId, teachers); //
     for (var t = 0; t < teachers.length; t++) {
       if (teacherIds.indexOf(teachers[t].userId) == -1) {
         // add this teacher to newTeachers;
@@ -395,104 +508,10 @@ function getTeachersFromTracker() {
   tSheet.getRange(1, 1, newTeachers.length, newTeachers[0].length).setValues(newTeachers);
 }
 
-function TEST_updateReportbookClassrooms() {
-  importClassrooms("john.kershaw@hope.edu.kh");
-}
-
-
-
-function updateReportbookClassrooms(teacherId) {
-  if (teacherId == undefined) {
-    teacherId = "";
-  }
-  
-  var coursesData = getCoursesFromClassroom(teacherId);
-  var goodCourses = coursesData[0];
-  goodCourses.sort();
-  var badCourses = coursesData[1];
-  badCourses.sort();
-  Logger.log("good: %s, bad: %s", goodCourses.length, badCourses.length);
-  
-  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
-  
-  var c, row, course;
-  var goodRowsStart, goodRowsEnd;
-  var badRowsStart, badRowsEnd;
-  
-  var startRow = 2;
-  goodRowsStart = startRow;
-  
-  // good courses
-  for (c = 0; c < goodCourses.length; c++) {
-    course = goodCourses[c];
-    //Logger.log(course);
-    row = startRow + c;
-    sheet.getRange(row, 2).setValue(course.name);
-    sheet.getRange(row, 3).setValue(course.alternateLink);
-    sheet.getRange(row, 4).setValue(course.id);
-    sheet.getRange(row, 5).setValue(course.ownerId);
-    if (course.teacherFolder != undefined && course.teacherFolder.id != undefined) {
-      sheet.getRange(row, 6).setValue(course.teacherFolder.id);
-    }
-  }
-  goodRowsEnd = row;
-  
-  sheet.getRange(goodRowsStart, 2, goodRowsEnd, 6)
-  .setFontWeight("normal")
-  .setFontColor("black");
-  
-  sheet.getRange(goodRowsEnd + 1, 2, 5, 4).setValue("");
-  
-  sheet.getRange(row + 3, 2)
-  .setValue("Old/bad/dead courses (not in reports)")
-  .setFontWeight("bold")
-  .setFontColor("#999999");
-  
-  // bad courses
-  startRow = row + 4;
-  badRowsStart = startRow;
-  
-  for (c = 0; c < badCourses.length; c++) {
-    course = badCourses[c];
-    //Logger.log(course);
-    row = startRow + c;
-    sheet.getRange(row, 2).setValue(course.name);
-    sheet.getRange(row, 3).setValue(course.alternateLink);
-    sheet.getRange(row, 4).setValue(course.id);
-    sheet.getRange(row, 5).setValue(course.ownerId);
-    
-    if (course.teacherFolder != undefined && course.teacherFolder.id != undefined) {
-      sheet.getRange(row, 6).setValue(course.teacherFolder.id);
-    }
-  }
-
-  badRowsEnd = row;
-  
-  sheet.getRange(badRowsEnd+1, 2, 20, 4).setValue("");
-  
-  sheet.getRange(badRowsStart, 2, badRowsEnd, 6)
-  .setFontWeight("normal")
-  .setFontColor("#999999");
-  
-  var rows = [[goodRowsStart, goodRowsEnd],
-                 [badRowsStart, badRowsEnd]];
-  var START = 0, END = 1;
-  
-  SpreadsheetApp.flush();
-  
-  // sort rows
-  for (var goodBad = 0; goodBad < rows.length; goodBad ++) {
-  sheet.getRange(rows[goodBad][START], 2, rows[goodBad][END], 8)
-  .sort(
-    [{column: 8, ascending: true}, // teacher name, alpha 
-     {column: 2, ascending: true}  // courseName
-    ]);
-  }
-}
 
 function TEST_getTeachersFromCourse() {
-  getTeachersFromCourse("16063195662");
+  var courseId = "16063195662";
+  getTeachersFromCourse(courseId);
 }
 
 function getTeachersFromCourse(courseId) {
@@ -530,10 +549,103 @@ function getTeachersFromCourse(courseId) {
 }
 
 
+function archiveAllCourses() {
+  // testTeacher can be "" or a teacher's email
+  var testTeacher = ""; // "john.kershaw@hope.edu.kh"; // must be string
+  var courses = getCoursesFromClassroom( testTeacher );
+  
+  var activeCourses = courses[0];
+  var archivedCourses = courses[1];
+  
+  var r=0;  // loop through active courses only
+  for (var c=0; c<courses[r].length; c++) {  // for every course
+    
+    Logger.log ( 
+      "\t%s\t%s\t%s\t%s", 
+      courses[r][c].name,
+      courses[r][c].courseState,
+      courses[r][c].id,
+      courses[r][c].ownerId
+    );
+    
+    var course = archiveCourse(courses[r][c].id); 
+    console.info ( 
+      "\t%s\t%s\t%s\t%s", 
+      course.name,
+      course.courseState,
+      course.id,
+      course.ownerId
+    );  
+  }
+}
+
+
+function TEST_archiveCourse() {
+  var courseId = "27333894361"; // Y2025 Science JG
+  archiveCourse(courseId);
+}
+
+function archiveCourse(courseId) {
+  var optionalArgs = {
+    updateMask: "courseState",
+  };
+  var course = Classroom.Courses.get(courseId);
+  var today = new Date();
+  var creationDate = new Date(course.creationTime);
+  var difference = dateDiffInDays(creationDate, today);
+  
+  if (difference > 60) {
+    course.courseState = "ARCHIVED";
+    var response = Classroom.Courses.patch(course, courseId, optionalArgs);
+    Logger.log("\t%s: %s (created %s days ago)", response.name, response.courseState, difference);
+  } else {
+    Logger.log("\t%s: SKIPPED (created %s days ago)", course.name, difference);
+  }
+  return course;
+}
+
+function TEST_getAllCoursesFromClassroom() {
+  var teacherId = "john.kershaw@hope.edu.kh";
+  var courses = getAllCoursesFromClassroom(teacherId);
+  Logger.log(courses);
+}
+
+function getAllCoursesFromClassroom(teacherId) {
+  if (teacherId == undefined) {
+    teacherId = ""
+  }
+  
+  var courses = getCoursesFromClassroom( teacherId );
+  
+  var activeCourses = courses[0];
+  var archivedCourses = courses[1];
+  
+  for (var r=0; r<courses.length; r++) {  // loop through both responses
+    for (var c=0; c<courses[r].length; c++) {  // for every course
+      Logger.log ( 
+        "\t%s\t%s\t%s\t%s", 
+        courses[r][c].name,
+        courses[r][c].section,
+        courses[r][c].courseState,
+        courses[r][c].id,
+        courses[r][c].ownerId
+      );
+    }
+  }
+  
+  return courses;
+}
+
+/*
+[19-07-17 16:33:30:901 BST] Y2025 Science JG is ACTIVE (27333894361)
+[19-07-17 16:33:30:901 BST] Y2023 Science JG is ACTIVE (27333894321)
+[19-07-17 16:33:30:902 BST] Y2025 Math JG is ACTIVE (15148557771)
+*/
+
 function TEST_getCoursesFromClassroom() {
-  var testTeacher = "17444398597"; // must be string
-  var response = getCoursesFromClassroom( "john.kershaw@hope.edu.kh" );
-  Logger.log ( response );
+  var teacherId = "john.kershaw@hope.edu.kh";
+  var courses = getCoursesFromClassroom(teacherId);
+  Logger.log(courses);
 }
 
 function getCoursesFromClassroom(teacherId) {
@@ -547,12 +659,12 @@ function getCoursesFromClassroom(teacherId) {
     pageSize: 50,
     teacherId: teacherId,
     // NO SPACES!
-    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId,courses.teacherFolder.id,courses.courseState",
+    fields: "nextPageToken,courses.name,courses.alternateLink,courses.id,courses.ownerId,courses.teacherFolder.id,courses.courseState,courses.section",
     pageToken: ""
   };
   
   var finished = false;
-  while (! finished && iterations < 2000) { // 2000 courses is more than we have!
+  while (! finished && iterations < 3000) { // 2000 courses is more than we have!
     iterations ++;
     var response = Classroom.Courses.list(optionalArgs);
     var rCourses = response.courses;
@@ -562,11 +674,15 @@ function getCoursesFromClassroom(teacherId) {
         
         var course = rCourses[i];
         // Logger.log('%s', course.name.slice(0,3));
-        if (course.courseState == "ACTIVE" && course.name.indexOf("Pastoral") == -1) {
+        var notPastoral = course.name.indexOf("Pastoral") == -1;
+        var notDevotion = course.name.indexOf("Devotion") == -1;
+        var isY0000 = course.name.match(/Y\d\d\d\d/g);
+        
+        if (course.courseState == "ACTIVE" && isY0000 && notPastoral && notDevotion) {
           courses.push(course);
           console.log("ACTIVE course found: " + course);
         } else {
-          console.log("NON-ACTIVE course found: %s", course.name); 
+          console.log("OTHER course found: %s", course.name); 
           archivedCourses.push(course);
         }
         console.log("Now I have %s good courses and %s archived courses", courses.length, archivedCourses.length);
@@ -590,11 +706,11 @@ function getCoursesFromClassroom(teacherId) {
   return [courses, archivedCourses];
 }
 
-function getStudentsFromClassroom() {
-  // loop through reportbooks
-  // grab students (first, last, email)
-  // push to rbId's OVERVIEW tab
-}
+//function getStudentsFromClassroom() {
+//  // loop through reportbooks
+//  // grab students (first, last, email)
+//  // push to rbId's OVERVIEW tab
+//}
 
 
 /*
