@@ -14,13 +14,15 @@ function sendTheDeveloperTheError(message){
 function logToSheet(message) {
   var date = new Date();
   var description = message;
+  
+  //  email Klaus with the error
   var email = Session.getActiveUser().getEmail();
   var rowContents = [date, email, description];
   
-  log.appendRow(rowContents); 
-
+  // add a row to the 'Log' sheet in the reportbook tracker
   var spreadsheet = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var log = spreadsheet.getSheetByName("Log");
+  log.appendRow(rowContents);
 }
 
 function logToDoc(message) {
