@@ -7,7 +7,11 @@
 */
 
 function TEST_updateReportbookClassrooms() {
-  importClassrooms("john.kershaw@hope.edu.kh");
+  var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
+  bRange = sheet.getDataRange().getValues();
+  Logger.log(bRange.length);
+  updateReportbookClassrooms("john.kennedy@hope.edu.kh");
 }
 
 function updateReportbookClassrooms(teacherId) {
@@ -28,8 +32,8 @@ function updateReportbookClassrooms(teacherId) {
   var c, row, course;
   var goodRowsStart, goodRowsEnd;
   var badRowsStart, badRowsEnd;
-  
-  var startRow = 2;
+
+  var startRow = sheet.getRange("B:B").getValues().length + 1;
   goodRowsStart = startRow;
   
   /*

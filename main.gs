@@ -99,7 +99,7 @@ var top = {
     COURSEID: 5,
     OWNERID: 6,
     TEACHERFOLDER: 7,
-    RBIDSTOEXPORT: 12, // replace this with getRBRows
+    RBIDSTOEXPORT: 13, // replace this with getRBRows
     
     // Columns in PORTFOLIOS Sheet
     LASTNAME: 1,
