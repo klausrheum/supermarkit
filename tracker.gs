@@ -255,7 +255,7 @@ function initialiseStudents() {
     if (student.email.length < 2 || 
         student.lastname.length < 2 || 
         student.firstname.length < 2 || 
-        student.year.length != 3) {
+        student.year.length < 3) {
       logIt(student.email + ", " + 
             student.lastname + ", " + 
             student.firstname + ", " + 
@@ -314,7 +314,9 @@ function createStudents() {
     var student = top.students[i];
     Logger.log(student.fullname);
     
-    student = createStudent(student);    
+    if (! student.fileid || student.fileid.length < 10) {
+      student = createStudent(student);    
+    }
   }
 }
 
