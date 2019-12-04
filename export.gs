@@ -689,13 +689,6 @@ function hideSheets() {
   }
 }
 
-function test_backupPastoralAdmin() {
-  var testEmail = "bobby.tables@students.hope.edu.kh";
-  var student = getStudentByEmail(testEmail);
-  
-  backupPastoralAdmin(student); 
-  
-}
 
 function backupAllPastoralAdmin() {
   var students = getStudents();
@@ -705,7 +698,40 @@ function backupAllPastoralAdmin() {
     
     var student = top.students[s];
     backupPastoralAdmin(student);
+    pushExtraCurricularToPortfolio(student);
   }  
+}
+
+function TEST_pushExtraCurricularToPortfolio() {
+  var testEmail = "bobby.tables@students.hope.edu.kh";
+  var student = getStudentByEmail(testEmail);
+  
+  pushExtraCurricularToPortfolio(student);
+}
+
+function pushExtraCurricularToPortfolio(student) {
+  console.warn('Pushing Extra Curricular to Pastoral Admin %s', student.fullname);
+  
+  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var portfoliosSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
+  var pf = SpreadsheetApp.openById(student.fileid);
+  var pfName = pf.getName();
+  
+  Logger.log("%s", student.fullname);
+  
+  var extra = portfoliosSheet
+  .getRange(student.row, top.COLS.EXTRACURRICULARSUMMARY).getValue();
+      
+  pf.getSheetByName(top.SHEETS.ADMIN)
+    .getRange(top.RANGES.ADMINEXTRACURRICULAR)
+    .setValue(extra);
+}
+
+function test_backupPastoralAdmin() {
+  var testEmail = "bobby.tables@students.hope.edu.kh";
+  var student = getStudentByEmail(testEmail);
+  
+  backupPastoralAdmin(student);
 }
 
 function backupPastoralAdmin(student) {

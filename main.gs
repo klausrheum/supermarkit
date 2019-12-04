@@ -126,7 +126,8 @@ var top = {
 
     PORTFOLIOLASTEXPORT:   13,
     PORTFOLIOTABSLIST:     14,
-
+    EXTRACURRICULARSUMMARY:24,
+    
   },
   
   RANGES: {
