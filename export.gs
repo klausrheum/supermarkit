@@ -601,6 +601,19 @@ function addSubTemplate(student, tabName) {
   if (tabName === undefined) {
     tabName = "SUB"
   }
+
+  // logIt("Adding tabName template to " + student.fullname , meta, "C");
+
+  var portfolioFile = SpreadsheetApp.openById(student.fileid); 
+  var subSheet = portfolioFile.getSheetByName(tabName);
+  var tabExists = subSheet != null;
+  
+  var sheets = portfolioFile.getSheets();
+  
+  if (tabExists) {
+    logIt("Tab " + tabName + " already exists, just update it", meta, "C");
+    
+  } else {
  
   // open the tab templates file
   // TODO DELETE var rbTemplatesId = "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys";
@@ -615,21 +628,11 @@ function addSubTemplate(student, tabName) {
     subjectSheetTemplate = rbTemplateSS.getSheetByName(top.SHEETS.SUB);
   }
   
-  // logIt("Adding tabName template to " + student.fullname , meta, "C");
-
-  var portfolioFile = SpreadsheetApp.openById(student.fileid); 
-  var subSheet = portfolioFile.getSheetByName(tabName);
-  var tabExists = subSheet != null;
-  
-  var sheets = portfolioFile.getSheets();
-  
-  if (tabExists) {
-    logIt("Tab " + tabName + " already exists, just update it", meta, "C");
-    
-  } else {
     logIt(student.fullname + ": tab " + tabName + " does not exist. Creating...", meta, "C");
     subSheet = subjectSheetTemplate.copyTo(portfolioFile);
+    logIt(student.fullname + ": tab " + tabName + " sheet copied...", meta, "C"); // DELETEME
     subSheet.setName(tabName);
+    logIt(student.fullname + ": tab " + tabName + " sheet renamed...", meta, "C"); // DELETEME
   }
   
   return subSheet;

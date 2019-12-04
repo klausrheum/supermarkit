@@ -368,7 +368,7 @@ function updateConditionalFormatting(ss) {
   var range = sheet.getRange("H3:W3");
  
   var rule = SpreadsheetApp.newConditionalFormatRule()
-  .whenFormulaSatisfied('=regexmatch(H3, " REP[0-9% ]*\z")')
+  .whenFormulaSatisfied('=regexmatch(H3, " REP[0-9% ]*\\z")')
   .setBackground("#33691e")
   .setFontColor("#FFFFFF")
   .setRanges([range])
