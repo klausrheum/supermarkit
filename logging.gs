@@ -57,7 +57,7 @@ function logIt(msg, meta, dest_override) {
   }
   
   if (output.dest == "C") {
-    console.info(output.text);
+    console.log(output.text);
   }
   
   return output;

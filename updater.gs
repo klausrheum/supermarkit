@@ -501,11 +501,11 @@ function updateValues(sheet, rangeA1, oldValues, newValues) {
   for (var r = 0; r < data.length; r++) {
     for (var c = 0; c < data[0].length; c++) {
       var cellValue = data[r][c];
-      Logger.log("Checking cell["+r+"]["+c+"]=" + cellValue);
+      //Logger.log("Checking cell["+r+"]["+c+"]=" + cellValue);
       for (var v = 0; v < oldValues.length; v++) {
         if (cellValue == oldValues[v]) {
           data[r][c] = newValues[v];
-          Logger.log("Updated cellValue from " + oldValues[v] + " to " + newValues[v]);
+          //Logger.log("Updated cellValue from " + oldValues[v] + " to " + newValues[v]);
         }
       }
     }

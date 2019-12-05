@@ -47,7 +47,7 @@ function exportAllRBs() {
     var rbName = rbss.getName();
 
     if (idsToExport.indexOf(rbId) > -1) {
-      console.info("%s is ticked for export", rbId);
+      console.info("%s is ticked for export", rbName);
       exportStudentsFromRB(rbss, studentsToUpdate);
   
     } else {
@@ -313,7 +313,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
       
       if (exportOverride != "Y" || ["Y", "y"].indexOf(rowExportYN) > -1) { 
         
-        console.log(
+        console.info(
           "[%s] STARTING: %s (%s)", 
           subYear, rowFullname, rowEmail);
         
@@ -348,8 +348,10 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             Math.round(rowAvgPercent*100), 
             rowScores.join(" + ")); 
         }
-        
+
+        //logIt(rowEmail + ": before getStudentByEmail", meta, "C"); // DELETEME
         var student = getStudentByEmail(rowEmail);
+        //logIt(rowEmail + ": after getStudentByEmail", meta, "C"); // DELETEME
         
         var portfolioFile = "";
         try {
@@ -374,12 +376,34 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             portfolioSheet = portfolioFile.getSheetByName(tabName);
           }
           
+          //logIt(rowEmail + ": before exportOverride:" + exportOverride, meta, "C"); // DELETEME
           if ( exportOverride != "NONE" ) {
-            
+
             // set Full Name
             var rbRepSheet = rbss.getSheetByName(template.reportsSheetName);
             rbRepSheet.getRange("B4").setValue(student.fullname);
-            SpreadsheetApp.flush();
+            
+            
+            //logIt(rowEmail + ": before update/refresh", meta, "C"); // DELETEME
+            // SpreadsheetApp.flush();
+            
+            var updated = false;
+            var attempt = 0;
+            while (! updated) {
+              var repName = rbRepSheet.getRange("B8").getValue();
+              updated =  repName == student.fullname;
+              logIt("Attempt: " + (attempt+1) + " B4: " + student.fullname + " B8:  " + repName + " so updated=" + updated, meta, "C"); // DELETEME
+              Utilities.sleep(1000);
+              attempt += 1;
+              if (attempt > 10) {
+                var message = " Cannot set B8 to " + student.fullname + " in Individual Report tab of " + tabName;
+                sendTheDeveloperTheError( message );
+                console.error ( message );
+                throw new Error(message);
+              };
+            }
+            //logIt(rowEmail + ": after update/refresh", meta, "C"); // DELETEME
+            
             
             // copy grades data
             var titlesAndPercentages = rbRepSheet.getRange("B1:S8").getValues();
@@ -401,6 +425,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
               }
             }
             
+
             // add Comment
             portfolioSheet.getRange("I4").setValue(rowComment);
             
@@ -425,6 +450,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
               }
             });
             
+
             // update timestamp, uncheck YN, etc
             // add datestamp
             var newTimestamp = "" + new Date();
@@ -433,7 +459,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
               return tab.indexOf("_backup") == -1;
             });
             var newExportTabsString = newExportTabs.join("\n");
-            Logger.log("newExportTabsString: %s", newExportTabsString);
+            // Logger.log("newExportTabsString: %s", newExportTabsString);
             
             var newExportYN = exported ? "Y" : "N";
             var url = portfolioFile.getUrl();
@@ -474,10 +500,11 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
           gradeSheet.getRange(r+7, 26, 1, 3).setValues([[newTimestamp, "No Portfolio, ignored", "N"]]);
         }
 
-        console.log(
+        console.info(
           "[%s] FINISHED: %s", 
           subYear, student.fullname);
       }
+
     }
   }
   // gradeSheet.getRange("Z7:AB46").setValues(replacementRows);
@@ -615,22 +642,22 @@ function addSubTemplate(student, tabName) {
     
   } else {
  
-  // open the tab templates file
-  // TODO DELETE var rbTemplatesId = "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys";
-  var rbTemplateSS = SpreadsheetApp.openById(top.FILES.RBTEMPLATES);
-
-  // copy the 'SUB' tab into the student portfolio
-  //var subjectSheetName = "SUB";
-  var subjectSheetTemplate;
-  if (tabName == "ELL") {
-    subjectSheetTemplate = rbTemplateSS.getSheetByName(top.SHEETS.ELL);
-  } else {
-    subjectSheetTemplate = rbTemplateSS.getSheetByName(top.SHEETS.SUB);
-  }
-  
+    // open the tab templates file
+    // TODO DELETE var rbTemplatesId = "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys";
+    var rbTemplateSS = SpreadsheetApp.openById(top.FILES.RBTEMPLATES);
+    
+    // copy the 'SUB' tab into the student portfolio
+    //var subjectSheetName = "SUB";
+    var subjectSheetTemplate;
+    if (tabName == "ELL") {
+      subjectSheetTemplate = rbTemplateSS.getSheetByName(top.SHEETS.ELL);
+    } else {
+      subjectSheetTemplate = rbTemplateSS.getSheetByName(top.SHEETS.SUB);
+    }
+    
     logIt(student.fullname + ": tab " + tabName + " does not exist. Creating...", meta, "C");
     subSheet = subjectSheetTemplate.copyTo(portfolioFile);
-    logIt(student.fullname + ": tab " + tabName + " sheet copied...", meta, "C"); // DELETEME
+    //logIt(student.fullname + ": tab " + tabName + " sheet copied...", meta, "C"); // DELETEME
     subSheet.setName(tabName);
     logIt(student.fullname + ": tab " + tabName + " sheet renamed...", meta, "C"); // DELETEME
   }
