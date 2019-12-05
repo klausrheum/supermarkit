@@ -2,12 +2,33 @@ function TEST_sendTheDeveloperTheError() {
   sendTheDeveloperTheError("This is a test"); 
 }
 
-function sendTheDeveloperTheError(message){
-  var to = "classroom@hope.edu.kh";
-  var subject = "SuperMarkIt Server Error";
-  GmailApp.sendEmail(to, subject, message);
-  logToDoc(message);
-  logToSheet(message);
+function sendTheDeveloperTheError(message) { // wrapper
+  logMe(message, 'warn');
+}
+  
+function logMe(message, level) { // wrapper
+    if (level == undefined || level == 'i') level = 'info';
+  
+  switch (level[0].toLowerCase()) {
+    case 'i': // info
+      console.info(message);
+      break;
+    case 'e': // error
+      console.error(message);
+      // break; both errors and warnings should be flagged to classroom@hope.edu.kh
+    case 'w': // warn
+      console.warn(message);
+
+      var to = "classroom@hope.edu.kh";
+      var subject = "SuperMarkIt Server Error";
+      GmailApp.sendEmail(to, subject, message);
+      logToDoc(message);
+      logToSheet(message);
+      break;
+      
+    default:
+      console.log(message);
+  }
 }
 
 

@@ -13,7 +13,7 @@ function exportAllRBs() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   
   var startTime = new Date(); 
-  console.warn("exportAllRBs: STARTED " + startTime );
+  logMe("exportAllRBs: STARTED " + startTime, 'warn');
 
   var idsToExport = getRbIdsToExport();
   console.log ("%s reportbooks tagged for export", idsToExport.length);
@@ -60,7 +60,7 @@ function exportAllRBs() {
   var endTime = new Date();
   var elapsedTime = (endTime - startTime)/1000;
   
-  console.warn("exportAllRBs: COMPLETED %s in %s secs", endTime, elapsedTime);
+  console.warn("exportAllRBs: COMPLETED " + endTime + " in " + elapsedTime + " secs", endTime, elapsedTime);
 }
 
 function getRbIdsToExport() {
@@ -204,6 +204,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
 
   var srcName = rbss.getName();
+  logMe(srcName, 'warn');
   var owner = rbss.getOwner();
   var len = srcName.length;
   
@@ -312,10 +313,8 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
       }
       
       if (exportOverride != "Y" || ["Y", "y"].indexOf(rowExportYN) > -1) { 
-        
-        console.info(
-          "[%s] STARTING: %s (%s)", 
-          subYear, rowFullname, rowEmail);
+        var message = "["+subYear+"] STARTING: " + rowFullname + " (" + rowEmail + ")";
+        logMe(message, 'warn');
         
         // count grades entered...
         var rowScores = [];
@@ -327,31 +326,23 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         
         // ... 2 or fewer grades ?
         if (rowScores.length <= 2) {
-          console.info(
-            '[%s] / %s grade(s) - %s',
-            subYear, rowScores.length.toString(), rowFullname);
+          var message = "FEW? " + rowScores.length.toString() + ' grade(s) ' + rowFullname;
+          logMe(message, 'warn');
         }
 
         // ... 10 or more grades ?
         if (rowScores.length >= 10) {
-          console.info(
-            '[%s] MANY? %s grade(s) - %s',
-            subYear, rowScores.length.toString(), rowFullname);
+          var message = 'MANY? ' + rowScores.length.toString() + ' grade(s) ' + rowFullname;
+          logMe(message, 'warn');
         }
         
         // ... average score less than 30% ?
         if (rowAvgPercent < 0.30) {
-          console.info(
-            "[%s] LOW? %s graded %s (%s = %s)", 
-            subYear, rowFullname, 
-            rowAvgGrade,  
-            Math.round(rowAvgPercent*100), 
-            rowScores.join(" + ")); 
+          var message = "LOW? " + rowFullname + ' graded ' + rowAvgGrade + ' (' + Math.round(rowAvgPercent*100) + ' = ' + rowScores.join(" + ") + ")";
+          logMe(message, 'warn'); 
         }
 
-        //logIt(rowEmail + ": before getStudentByEmail", meta, "C"); // DELETEME
         var student = getStudentByEmail(rowEmail);
-        //logIt(rowEmail + ": after getStudentByEmail", meta, "C"); // DELETEME
         
         var portfolioFile = "";
         try {
@@ -396,7 +387,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
               Utilities.sleep(1000);
               attempt += 1;
               if (attempt > 10) {
-                var message = " Cannot set B8 to " + student.fullname + " in Individual Report tab of " + tabName;
+                var message = "Name mis-match? Cannot select " + student.fullname + " in cell B4 of 'Individual Report' tab of file: " + srcName;
                 sendTheDeveloperTheError( message );
                 console.error ( message );
                 throw new Error(message);

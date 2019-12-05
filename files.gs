@@ -424,7 +424,7 @@ function killByName() {
   var managers = ["Cheryl", "Mike", "Cath", "Eric"];
   
   var keepPatterns = [/(Admin|Pastoral)/];
-  var killPatterns = [/(Copy of SUB|Subject Year 00|Select a student)/];
+  var killPatterns = [/(Copy of SUB|Subject Year 00|Select a student|HOPE OR IGCSE)/];
   
   var forReal = true; // set true to actually delete the sheets matched, false to view them
   
