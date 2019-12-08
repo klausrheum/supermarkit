@@ -6,7 +6,9 @@
 
 
 function updateReportbooks() {
-  console.log("updateReportbooks()");
+  var makeChanges = false; // if false, just log mismatch
+  
+  logMe("UPDATE: Pre-check Reportbooks");
   
   var rbRows = getRbRows();
   
@@ -19,8 +21,8 @@ function updateReportbooks() {
     if (! id || id.length < 2) { 
       continue;
     }
-        
-    console.log(rbRow.courseName);
+    
+    logMe("UPDATE: " + rbRow.courseName);
 
     // SAFETY CATCH =============================
     
@@ -29,7 +31,7 @@ function updateReportbooks() {
     // END SAFETY CATCH =========================
     
     var ss = SpreadsheetApp.openById(id);
-    //console.info("Updating " + ss.getName());
+    //logMe("Updating " + ss.getName() );
     var rbSubject = rbRow["Subject Name in Report"];
     var rbTeacher = rbRow["ownerName"];
     
@@ -42,14 +44,14 @@ function updateReportbooks() {
     var updateMeta = false;
     if (rbSubject != overviewSubject) {
       updateMeta = true;
-      console.warn("Mismatched SUBJECT: overview: %s != rb: %s", overviewSubject, rbSubject);
+      logMe("WARN: Mismatched SUBJECT: overview: " + overviewSubject + " != rb: " + rbSubject, 'warn');
     }
     if (rbTeacher != overviewTeacher) {
       updateMeta = true;
-      console.warn("Mismatched TEACHER: overview: %s != rb: %s", overviewTeacher, rbTeacher);
+      logMe("WARN: Mismatched TEACHER: overview: " + overviewTeacher + " != rb: " + rbTeacher, 'warn');
     }
     
-    if (updateMeta) {
+    if (makeChanges && updateMeta) {
       // FIXME: Need to pull subjectName, teacherName from Reportbooks tab
       updateReportbookMetadata(id, rbSubject, rbTeacher);
     }
@@ -57,10 +59,11 @@ function updateReportbooks() {
     //    updateCommentsColumn(ss);
     //    updateExportColumns(ss);
     //    updateFreezeRows(ss);
-    //  updateRBFormulas(ss);
+    updateRBFormulas(ss);
+    updateIBPercentages(ss);
     //    updateDeleteUnusedDatesAndTitles(ss);
-    // updateGradeScale(ss);
-    // updateConditionalFormatting(ss); // doesn't work in this scope :(
+    //updateGradeScale(ss);
+    //updateConditionalFormatting(ss); // doesn't work in this scope :(
     
     //   sheet(report)
     //     // display comment
@@ -69,8 +72,20 @@ function updateReportbooks() {
     //     .chartType(scatter)
     //     .trendLines(false)
     
-    SpreadsheetApp.flush();
+    Utilities.sleep(1000);
   }
+}
+
+function TEST_updateIBPercentages() {
+  var id = '1AkMktNVONfzThEL69Uxed7RKJwCDaLCirUVXHmJ0rdM';
+  var ss = SpreadsheetApp.openById(id);
+  updateIBPercentages(ss);
+}
+
+function updateIBPercentages(ss) {
+ var sheet = ss.getSheetByName(top.SHEETS.INDREP);
+  sheet.getRange("D7:D11")
+  .setNumberFormat('#');
 }
 
 function updateDeleteUnusedDatesAndTitles(ss) {
@@ -535,7 +550,7 @@ function updateAllPortfolios() {
     // if (s > 3) break;
     
     var student = students[s];
-    console.log("%s %s", student.fullname, student.fileid); 
+    logMe("UPDATE: Tidying Portfolio for " + student.fullname); 
     var pf = SpreadsheetApp.openById(student.fileid);
     
     // updatePortfolioAttributes(pf);
@@ -677,6 +692,7 @@ function updatePortfolioFormulas() {
 //}
 
 function updateRBFormulas(ss) {
+  logMe("FORMAT: Skip blanks, change 'REP' to 'weighting' for " + ss.getName(), 'log' );
   
   var formulas = [
     {
