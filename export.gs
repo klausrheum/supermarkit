@@ -13,7 +13,7 @@ function exportAllRBs() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   
   var startTime = new Date(); 
-  logMe("exportAllRBs: STARTED " + startTime, 'warn');
+  logMe("exportAllRBs: START " + startTime, 'warn');
 
   var idsToExport = getRbIdsToExport();
   console.log ("%s reportbooks tagged for export", idsToExport.length);
@@ -60,7 +60,7 @@ function exportAllRBs() {
   var endTime = new Date();
   var elapsedTime = (endTime - startTime)/1000;
   
-  console.warn("exportAllRBs: COMPLETED " + endTime + " in " + elapsedTime + " secs", endTime, elapsedTime);
+  logMe("exportAllRBs: END " + endTime + " in " + elapsedTime + " secs", 'warn');
 }
 
 function getRbIdsToExport() {
@@ -204,13 +204,13 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
 
   var srcName = rbss.getName();
-  logMe(srcName, 'warn');
   var owner = rbss.getOwner();
   var len = srcName.length;
   
   var subYear = srcName.substring(0,5);
   var tabName = rbss.getSheetByName(top.SHEETS.OVERVIEW)
   .getRange(top.RANGES.OVERVIEWSUBJECT).getValue();
+  logMe('EXPORT: ' + srcName);
 
   var sub = tabName;
   //var students = getStudents();
@@ -231,14 +231,10 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
     //console.log("title: %s maxScore: %s avg: %s", title, maxScore, avg);
     if (title != "" && title.indexOf("REP") > -1) {
       if (maxScore == "") {
-        console.warn(
-          "[%s] Max score required for %s", 
-          subYear, title);
+        logMe("[" + subYear + "] Max score required for " + title, 'warn');
       }
       if (avg == "") {
-        console.warn(
-          "[%s] Average score formula required for %s", 
-          subYear, title);
+        logMe("[" + subYear + "] Average score formula required for " + title, 'warn');
       }  
     }
   }
@@ -292,18 +288,14 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
     if (rowEmail == "") {
 
       if (rowLastname != "") { // student has last name
-        console.warn(
-          "[%s] EMAIL? %s missing email", 
-          subYear, rowFullname);
-        
+        logMe("[" + subYear + "] EMAIL? missing email: " + rowFullname, 'warn');
       }
       
     } else { // row has an email
       
       // Fullname formula missing
       if (rowFirstname + " " + rowLastname != rowFullname) {
-        console.warn("[%s] FULLNAME? Fullname formula missing in col C: %s != %s+%s in %s", 
-                     subYear, rowFullname, rowFirstname, rowLastname, rowEmail);
+        logMe("[" + subYear + "] FULLNAME? Fullname formula missing in col C: " + rowFullname + " != " + rowFirstname + rowLastname + " in " + rowEmail, 'warn');
       }
       
       if (studentsToUpdate.length > 0) {
@@ -313,8 +305,8 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
       }
       
       if (exportOverride != "Y" || ["Y", "y"].indexOf(rowExportYN) > -1) { 
-        var message = "["+subYear+"] STARTING: " + rowFullname + " (" + rowEmail + ")";
-        logMe(message, 'warn');
+        var message = "["+subYear+"] START: " + rowFullname + " (" + tabName + ")";
+        logMe(message);
         
         // count grades entered...
         var rowScores = [];
@@ -326,19 +318,19 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         
         // ... 2 or fewer grades ?
         if (rowScores.length <= 2) {
-          var message = "FEW? " + rowScores.length.toString() + ' grade(s) ' + rowFullname;
+          var message = "FEW? " + rowScores.length.toString() + ' grade(s) ' + rowFullname + " (" + tabName + ") ";
           logMe(message, 'warn');
         }
 
         // ... 10 or more grades ?
         if (rowScores.length >= 10) {
-          var message = 'MANY? ' + rowScores.length.toString() + ' grade(s) ' + rowFullname;
+          var message = 'MANY? ' + rowScores.length.toString() + ' grade(s) ' + rowFullname + " (" + tabName + ") ";
           logMe(message, 'warn');
         }
         
         // ... average score less than 30% ?
         if (rowAvgPercent < 0.30) {
-          var message = "LOW? " + rowFullname + ' graded ' + rowAvgGrade + ' (' + Math.round(rowAvgPercent*100) + ' = ' + rowScores.join(" + ") + ")";
+          var message = "LOW? " + rowFullname + " (" + tabName + ") " + ' graded ' + rowAvgGrade + ' (' + Math.round(rowAvgPercent*100) + ' = ' + rowScores.join(" + ") + ")";
           logMe(message, 'warn'); 
         }
 
@@ -383,13 +375,12 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             while (! updated) {
               var repName = rbRepSheet.getRange("B8").getValue();
               updated =  repName == student.fullname;
-              logIt("Attempt: " + (attempt+1) + " B4: " + student.fullname + " B8:  " + repName + " so updated=" + updated, meta, "C"); // DELETEME
+              // logIt("Attempt: " + (attempt+1) + " B4: " + student.fullname + " B8:  " + repName + " so updated=" + updated, meta, "C"); // DELETEME
               Utilities.sleep(1000);
               attempt += 1;
               if (attempt > 10) {
                 var message = "Name mis-match? Cannot select " + student.fullname + " in cell B4 of 'Individual Report' tab of file: " + srcName;
-                sendTheDeveloperTheError( message );
-                console.error ( message );
+                logMe( message, 'warn' );
                 throw new Error(message);
               };
             }
@@ -491,9 +482,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
           gradeSheet.getRange(r+7, 26, 1, 3).setValues([[newTimestamp, "No Portfolio, ignored", "N"]]);
         }
 
-        console.info(
-          "[%s] FINISHED: %s", 
-          subYear, student.fullname);
+        logMe("[" + subYear + "] END: ", student.fullname);
       }
 
     }
@@ -728,7 +717,7 @@ function TEST_pushExtraCurricularToPortfolio() {
 }
 
 function pushExtraCurricularToPortfolio(student) {
-  console.warn('Pushing Extra Curricular to Pastoral Admin %s', student.fullname);
+  logMe('PUSH ' + student.fullname + ' Extra Curricular to Pastoral Admin');
   
   var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var portfoliosSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
@@ -760,7 +749,7 @@ function backupPastoralAdmin(student) {
     [top.RANGES.ADMINPASTORALCOMMENT, top.COLS.PASTORALCOMMENTBACKUP]
   ];
   
-  console.warn('Backing up Pastoral Admin data for %s', student.fullname);
+  logMe('BACKUP ' + student.fullname + ' Pastoral Admin data');
   var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var portfoliosSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
   var pf = SpreadsheetApp.openById(student.fileid);

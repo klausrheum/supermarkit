@@ -7,27 +7,42 @@ function sendTheDeveloperTheError(message) { // wrapper
 }
   
 function logMe(message, level) { // wrapper
-    if (level == undefined || level == 'i') level = 'info';
+  if (level == undefined || level == 'i') level = 'info';
+  
+  var alertLevel = 0; 
+  // 0:log to console (doesn't happen when running from the menu
+  // 1: log to sheet & doc
+  // 2: log to email
   
   switch (level[0].toLowerCase()) {
-    case 'i': // info
-      console.info(message);
-      break;
     case 'e': // error
-      console.error(message);
-      // break; both errors and warnings should be flagged to classroom@hope.edu.kh
+      console.error(message); // email errors and warnings to classroom@hope.edu.kh
+      alertLevel = 2;
+      break;
+      
     case 'w': // warn
       console.warn(message);
+      alertLevel = 2;
+      break; 
 
-      var to = "classroom@hope.edu.kh";
-      var subject = "SuperMarkIt Server Error";
-      GmailApp.sendEmail(to, subject, message);
-      logToDoc(message);
-      logToSheet(message);
+    case 'i': // info
+      console.info(message);
+      alertLevel = 1;
       break;
       
     default:
       console.log(message);
+  }
+  
+  if (alertLevel >= 1) {
+      logToDoc(message); // this keeps stopping the script      
+      logToSheet(message);  // log 'info' to the 'Log' tab
+  }
+  
+  if (alertLevel >= 2) {
+    var to = "classroom@hope.edu.kh";
+    var subject = "SuperMarkIt: " + message.substring(0,20);
+    GmailApp.sendEmail(to, subject, message);
   }
 }
 
@@ -36,7 +51,7 @@ function logToSheet(message) {
   var date = new Date();
   var description = message;
   
-  //  email Klaus with the error
+  //  log date, user, message
   var email = Session.getActiveUser().getEmail();
   var rowContents = [date, email, description];
   
@@ -47,15 +62,21 @@ function logToSheet(message) {
 }
 
 function logToDoc(message) {
-  var logFolderName = "SuperMarkIt Receipts";
-  var logFileId = "1oKLTpAHp8xxMFEDwkNcCbQQfLn_zCthbQPc5JhNWR2o";
-  var logFile = DocumentApp.openById(logFileId);
+  // fails consistently - log doc too long? start fresh one each time? TODO
   
-  var body = logFile.getBody();
-  body.appendHorizontalRule();
-  body.appendParagraph(new Date());
-  body.appendParagraph(message);
-  body.appendHorizontalRule();
+//  var logFolderName = "SuperMarkIt Receipts";
+//  var logFileId = "1oKLTpAHp8xxMFEDwkNcCbQQfLn_zCthbQPc5JhNWR2o";
+//  try {  
+//    var logFile = DocumentApp.openById(logFileId);
+//    
+//    var body = logFile.getBody();
+//    body.appendHorizontalRule();
+//    body.appendParagraph(new Date());
+//    body.appendParagraph(message);
+//    body.appendHorizontalRule();
+//  } catch (e) {
+//   // nothing 
+//  }
 }
 
 function logIt(msg, meta, dest_override) {
