@@ -19,7 +19,7 @@ function exportAllRBs() {
   console.log ("%s reportbooks tagged for export", idsToExport.length);
   console.log (idsToExport);
   
-  var studentsToUpdate = getStudentsToUpdate();  
+  var studentsToUpdate = getEmailsToUpdate();  
   console.log ("%s students tagged for export", studentsToUpdate.length);
   console.log (studentsToUpdate);
   
@@ -83,7 +83,7 @@ function getRbIdsToExport() {
   return idsToExport;
 }
 
-function getStudentsToUpdate() {
+function getEmailsToUpdate() {
   // build list of students ticked for export
   var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
   var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
@@ -335,16 +335,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         }
 
         var student = getStudentByEmail(rowEmail);
-        
-        var portfolioFile = "";
-        try {
-          portfolioFile = SpreadsheetApp.openById(student.fileid);
-        }
-        catch(e) {
-          console.error(
-            "[%s] FILE? %s, error: ", 
-            subYear, student.email, e);           
-        }
+        var portfolioFile = getPortfolioFile(student);
         
         if (portfolioFile != "") {
           
@@ -421,28 +412,11 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
 //              portfolioSheet.getRange("B6").setValue("This subject is not formally assessed");  
 //            }
             
-            // DONE add average grade to tabs list
-            var tabsList = [];
-            tabsList = portfolioFile.getSheets().map(function(sheet) {
-              var sName = sheet.getName();
-              if (["Admin", "Pastoral"].indexOf(sName) > -1) {
-                return sName;
-              } else {
-                return sName + ": " + sheet.getRange("D11").getValue() ;
-              }
-            });
+            grabPortfolioTabsAndGrades(student);
             
-
             // update timestamp, uncheck YN, etc
             // add datestamp
-            var newTimestamp = "" + new Date();
-            
-            var newExportTabs = tabsList.filter(function(tab) {
-              return tab.indexOf("_backup") == -1;
-            });
-            var newExportTabsString = newExportTabs.join("\n");
-            // Logger.log("newExportTabsString: %s", newExportTabsString);
-            
+            var newTimestamp = "" + new Date();            
             var newExportYN = exported ? "Y" : "N";
             var url = portfolioFile.getUrl();
             url += '#gid=';
@@ -465,15 +439,6 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             // TODO (IDEA - MAYBE?) copy grade data (do the math?) and the comment
             
             
-            // update list of exported tabs to Portfolios tab
-            pfSheet
-            .getRange(student.row, top.COLS.PORTFOLIOTABSLIST)
-            .setValue(newExportTabsString);
-            
-            pfSheet
-            .getRange(student.row, top.COLS.PORTFOLIOLASTEXPORT)
-            .setValue(newTimestamp);
-            
           }
           
         } else {
@@ -481,15 +446,63 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
           console.log("No Portfolio, ignored");
           gradeSheet.getRange(r+7, 26, 1, 3).setValues([[newTimestamp, "No Portfolio, ignored", "N"]]);
         }
-
+        
         logMe("[" + subYear + "] END: ", student.fullname);
       }
-
+      
     }
   }
   // gradeSheet.getRange("Z7:AB46").setValues(replacementRows);
   
 }
+
+function getPortfolioFile(student) {
+  var portfolioFile = "";
+  try {
+    portfolioFile = SpreadsheetApp.openById(student.fileid);
+  }
+  catch(e) {
+    logMe(
+      "[" + subYear + "] PORTFOLIO MISSING? " + student.email + ", error: " + e, 'error');           
+  }
+  return portfolioFile;
+}
+
+function grabPortfolioTabsAndGrades(student) {
+  var portfolioFile = getPortfolioFile(student);
+  if (portfolioFile) {
+    
+    // add average grade to tabs list
+    var tabsList = [];
+    tabsList = portfolioFile.getSheets().map(function(sheet) {
+      var sName = sheet.getName();
+      if (["Admin", "Pastoral"].indexOf(sName) > -1) {
+        return sName;
+      } else {
+        return sName + ": " + sheet.getRange("D11").getValue() ;
+      }
+    });
+    
+    
+    var newExportTabs = tabsList.filter(function(tab) {
+      return tab.indexOf("_backup") == -1;
+    });
+    var newExportTabsString = newExportTabs.join("\n");
+    
+    // update list of exported tabs to Portfolios tab
+    var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+    var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
+    pfSheet
+    .getRange(student.row, top.COLS.PORTFOLIOTABSLIST)
+    .setValue(newExportTabsString);
+    
+    var newTimestamp = "" + new Date();
+    pfSheet
+    .getRange(student.row, top.COLS.PORTFOLIOLASTEXPORT)
+    .setValue(newTimestamp);
+  }
+}
+
 
 function copyPastoralToAdmin() {  
   
@@ -698,14 +711,17 @@ function hideSheets() {
 
 
 function backupAllPastoralAdmin() {
-  var students = getStudents();
+  var students = getStudents();  
+  var selectedStudentEmails = getEmailsToUpdate();  
 
   for (var s = 0; s < top.students.length; s++) {
     //if (s >= 30) break;
-    
-    var student = top.students[s];
-    backupPastoralAdmin(student);
-    pushExtraCurricularToPortfolio(student);
+    var student = students[s];
+    if (selectedStudentEmails.indexOf(student.email) > -1) {
+      backupPastoralAdmin(student);
+      pushExtraCurricularToPortfolio(student);
+      grabPortfolioTabsAndGrades(student);
+    }
   }  
 }
 

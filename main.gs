@@ -333,7 +333,7 @@ function importGrades(rbId, courseId) {
    dueMonths = [7, 8, 9, 10, 11, 12];
   } else {
     var message = "Parsing top.META.SEM for dueMonth didn't match Dec or Jun. Fix in main.gs";
-    sendTheDeveloperTheError( message );
+    logMe( message, 'error' );
     console.error ( message );
     throw new Error(message);
   }

@@ -8,7 +8,7 @@
 function updateReportbooks() {
   var makeChanges = false; // if false, just log mismatch
   
-  logMe("UPDATE: Pre-check Reportbooks");
+  logMe("START: Pre-check Reportbooks");
   
   var rbRows = getRbRows();
   
@@ -44,11 +44,11 @@ function updateReportbooks() {
     var updateMeta = false;
     if (rbSubject != overviewSubject) {
       updateMeta = true;
-      logMe("WARN: Mismatched SUBJECT: overview: " + overviewSubject + " != rb: " + rbSubject, 'warn');
+      logMe("WARN: Mismatched SUBJECT: Overview=" + overviewSubject + " but Reportbook=" + rbSubject + ' in ' + ss.getName(), 'warn');
     }
     if (rbTeacher != overviewTeacher) {
       updateMeta = true;
-      logMe("WARN: Mismatched TEACHER: overview: " + overviewTeacher + " != rb: " + rbTeacher, 'warn');
+      logMe("WARN: Mismatched TEACHER: Overview=" + overviewTeacher + " but Reportbook=" + rbTeacher + ' in ' + ss.getName(), 'warn');
     }
     
     if (makeChanges && updateMeta) {
@@ -692,7 +692,7 @@ function updatePortfolioFormulas() {
 //}
 
 function updateRBFormulas(ss) {
-  logMe("FORMAT: Skip blanks, change 'REP' to 'weighting' for " + ss.getName(), 'log' );
+  logMe("FORMAT: Skip blanks, REP > weighting " + ss.getName(), 'log' );
   
   var formulas = [
     {
