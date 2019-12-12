@@ -1,7 +1,172 @@
 // files.gs ====================================================
-// imports files newly shared to Klaus, adds them to the tracker
+// imports files newly shared to Klaus, adds them to the tracker (replaced by Import Courses)
+// killByName for removing duplicate/broken Portfolio sheets
 // exports finished portfolios to pdf & emails
 // =============================================================
+
+function killByName() {
+  /*
+  WHAT: Remove bad / misnamed / duplicate sheets matched by killPatterns in Portfolios ticked for 'Export'
+  WHY1: When the exportAll script copies the SUB sheet to a Portfolio, it then
+        tries to rename it. If the name already exists, you'll be left with 'Copy of SUB'
+  WHY2: If a teacher changes the name of the subject in the Overview tab of their Reportbook
+        AFTER the tabs have been generated, you'll end up with two near-identical tabs.
+        
+  HOW:  Enter the name of the unwanted tab in the killPatterns regex. If you don't understand regex, go learn, I'll wait.
+        Patterns are case-sensitive, so 'art' will match '' but not 'Art'
+        To lock to the start of the sheetname, put ^ at the beginning, eg /^IGCSE/ will kill any sheet starting with 'IGCSE'
+        To lock to the end of the sheetname, put $ at the end, eg /HL$/ will kill all sheets ending with 'HL'
+        
+        Unless locked, patterns will match ANYWHERE in the sheet name, so 
+        /Art/ will match 'Visual Arts', but /Visual Art$/ won't
+        /Theory/ will match 'IB Theory of Knowledge', but /^Theory/ won't
+        
+  */
+  
+  // Test your regex before deploying! https://regex101.com/r/PjK1bJ/1
+  
+  logMe("START killByName()");
+  
+  // kill everything except Admin & Pastoral
+  var managers = ["Cheryl", "Mike", "Cath", "Eric"];
+  
+  var keepPatterns = [/(Admin|Pastoral)/];
+  var killPatterns = [/(^Copy of SUB|Subject Year 00|Select a student|HOPE OR IGCSE|^Korean$)/];
+  
+  var forReal = true; // set true to actually delete the sheets matched, false to view them
+  
+  return keepKillPortfolioSheets(keepPatterns, killPatterns, forReal);  
+  logMe("END killByName()");
+}
+
+
+function keepAdminPastoralKillAllSubjects() {
+  console.log("START keepAdminPastoralKillAllSubjects()");
+  
+  // kill everything except Admin & Pastoral
+  var keepPatterns = [/(Admin|Pastoral)/];
+  var killPatterns = [/.*/];
+  var forReal = false; // set true to actually delete the sheets matched, false to view them
+  
+  return keepKillPortfolioSheets(keepPatterns, killPatterns, forReal);
+}
+
+function keepKillPortfolioSheets(keepPatterns, killPatterns, forReal) {
+  if (forReal === undefined) {
+    forReal = false;
+  }
+  
+  console.log("START keepKillPortfolioSheets(%s, %s, %s)", keepPatterns, killPatterns, forReal);
+  
+  var students = getStudents();
+  var selectedStudentEmails = getEmailsToUpdate();
+  
+  var sheetsKilled = [];
+  
+  for (var i = 0; i < students.length; i++) {
+    if (selectedStudentEmails.indexOf( students[i].email ) == -1) continue;
+
+    var ss = SpreadsheetApp.openById( students[i].fileid );
+    console.warn("[%s] Checking for unwanted sheets to kill", students[i].fullname);
+    
+    console.warn("keepSheets: %s, killSheets:", keepPatterns, killPatterns);
+    var thisSheetKills = keepKillSheets(ss, keepPatterns, killPatterns, forReal);
+    
+    // is this sheet in the 'killed' list?
+    thisSheetKills.forEach(function (sheetName, j) {
+      if (sheetsKilled.indexOf(sheetName) == -1) {
+        sheetsKilled.push(sheetName);
+      }
+    });
+    grabPortfolioTabsAndGrades(students[i]);
+  }
+  if (sheetsKilled.length == 0) {
+    logMe("SUMMARY: No sheets deleted");
+  } else {
+    logMe("SUMMARY: deleted " + sheetsKilled.join(", "));
+  }
+  console.log("END keepKillPortfolioSheets()");
+  
+  return sheetsKilled;
+}
+
+
+function TEST_keepKillSheets() {
+  console.log("TEST_keepKillSheets()");
+  
+  var lisa = "1sS-WJZI3uBvQCx396gQPJNoxok9i9OERAFm8OSqohqg"; 
+  var ss = SpreadsheetApp.openById(lisa);
+  var forReal = false;
+  
+  keepKillSheets(ss, [/.*_backup/], forReal); // incorrect parameters, should fail
+  keepKillSheets(ss, [/(Admin|Pastoral)/], [/.*/], forReal); // correct parameters, should pass
+  
+  console.log("END TEST_keepKillSheets()");
+
+}
+
+
+function keepKillSheets(ss, keepPatterns, killPatterns, forReal) {
+  if (keepPatterns === undefined || killPatterns === undefined) {
+    console.error("keepKillSheets called with incorrect parameters - aborted");
+    return false;
+  }
+  
+  if (forReal === undefined) {
+    forReal = false; 
+  }
+  
+  var sheets = ss.getSheets();
+  
+  var sheetsKilled = [];
+  
+  // kill all the sheets we DON'T want, unless they match keepPatterns
+  sheets.forEach(function (s, i) {
+    var sheetName = s.getName();
+    var keep = false;
+    var kill = false; 
+    
+    keepPatterns.forEach(function (pattern, j) {
+      
+      if(sheetName.match(pattern) ) {
+        keep = true;
+        console.log ("[%s] '%s' found in sheetName '%s', adding KEEP tag", ss.getName(), pattern, sheetName);
+        
+      } else {
+        console.log ("'%s' not found in sheetName '%s', no KEEP tag", pattern, sheetName); 
+      }
+    });
+    
+    if (! keep) {
+    
+      killPatterns.forEach(function (pattern, j) {
+        
+        if(sheetName.match(pattern) ) {
+          kill = true;
+          console.log ("'%s' found in sheetName '%s', adding KILL tag", pattern, sheetName); 
+        } else {
+          console.log ("'%s' not found in sheetName '%s', no KILL tag", pattern, sheetName); 
+        }
+        
+      });
+    }
+    
+    if (kill && ! keep) {
+      sheetsKilled.push(sheetName);
+      
+      if (forReal) {
+        ss.deleteSheet(s);  // (UN) COMMENT THIS LINE TO (USE) TEST
+        logMe ("KILL: Deleted sheet " + sheetName + " from file " + ss.getName());
+      }
+    }
+    
+  });
+  
+  return sheetsKilled;
+}
+
+
+
 
 /**
  * Generate PDFs from Portfolios 
@@ -13,7 +178,7 @@ function generateSelectedPortfolioPDFs(sendEmails) {
     sendEmails = false;
   }
 
-  console.info("START generateAllPortfolioPDFs()");
+  logMe("START generateAllPortfolioPDFs()", 'warn');
   
   var students = getStudents();  
   var selectedStudentEmails = getEmailsToUpdate();  
@@ -30,7 +195,7 @@ function generateSelectedPortfolioPDFs(sendEmails) {
       
       // if (student.firstname == "Hahun") continue;
       
-      console.log("Exporting PDF for %s", student.fullname); 
+      logMe("PDF: Exporting " + student.fullname); 
       var pf = SpreadsheetApp.openById(student.fileid);
       
       var guardianEmail = sendEmails ? student.guardianemail : "";
@@ -38,7 +203,7 @@ function generateSelectedPortfolioPDFs(sendEmails) {
       createPdf(pf, guardianEmail, [/^Admin$/, /.*_backup/], [/^Admin$/]);
     }
   }
-  console.info("END generateAllPortfolioPDFs()");
+  logMe("END generateAllPortfolioPDFs()", 'warn');
 }
 
 function test_createPdf() {
@@ -109,7 +274,7 @@ function createPdf(ss, guardianEmail, hideBeforePatterns, showAfterPatterns) {
 
 function savePDF( ss, optEmail) {
   var outputName = ss.getName(); 
-  console.log("Exporting PDF %s", outputName);
+  logMe("Exporting PDF " + outputName);
   
   // Get folder containing spreadsheet, for later export
   var parents = DriveApp.getFileById(ss.getId()).getParents();
@@ -165,11 +330,11 @@ function savePDF( ss, optEmail) {
   var blob = response.getBlob().setName((outputName)+ '.pdf');
   folder.createFile(blob);
 
-  console.log("Guardian email: %s", optEmail); 
+  logMe("Guardian email: " + optEmail); 
   
   if (optEmail) {
     console.log("Sending email");
-    var body = "Dear Parents,\nPlease find attached your child's report. Please contact the subject teacher if you have subject-specific questions.\n\nWarm regards,\nMongkul\nPA to the Principal.";
+    var body = "Dear Parents,\nPlease find attached your child's report. Please contact the subject teacher if you have subject-specific questions.\n\nWarm regards,\nSecondary Principal.";
     
     //body = "Dear Parents,\nPlease find attached an UPDATED version of your child's report. A geography score had been omitted.\n\nWarm regards,\nMongkul\nPA to the Principal.";
 
@@ -402,164 +567,6 @@ function run() {
   copyFolder(srcFolderId, dstFolderId);
 }
 
-
-function TEST_keepKillSheets() {
-  console.log("TEST_keepKillSheets()");
-  
-  var lisa = "1sS-WJZI3uBvQCx396gQPJNoxok9i9OERAFm8OSqohqg"; 
-  var ss = SpreadsheetApp.openById(lisa);
-  var forReal = false;
-  
-  keepKillSheets(ss, [/.*_backup/], forReal); // incorrect parameters, should fail
-  keepKillSheets(ss, [/(Admin|Pastoral)/], [/.*/], forReal); // correct parameters, should pass
-  
-  console.log("END TEST_keepKillSheets()");
-
-}
-
-function killByName() {
-  /*
-  WHAT: Remove bad / misnamed / duplicate sheets matched by killPatterns in Portfolios ticked for 'Export'
-  WHY1: When the exportAll script copies the SUB sheet to a Portfolio, it then
-        tries to rename it. If the name already exists, you'll be left with 'Copy of SUB'
-  WHY2: If a teacher changes the name of the subject in the Overview tab of their Reportbook
-        AFTER the tabs have been generated, you'll end up with two near-identical tabs.
-        
-  HOW:  Enter the name of the unwanted tab in the killPatterns regex. If you don't understand regex, go learn, I'll wait.
-        Patterns are case-sensitive, so 'art' will match '' but not 'Art'
-        To lock to the start of the sheetname, put ^ at the beginning, eg /^IGCSE/ will kill any sheet starting with 'IGCSE'
-        To lock to the end of the sheetname, put $ at the end, eg /HL$/ will kill all sheets ending with 'HL'
-        
-        Unless locked, patterns will match ANYWHERE in the sheet name, so 
-        /Art/ will match 'Visual Arts', but /Visual Art$/ won't
-        /Theory/ will match 'IB Theory of Knowledge', but /^Theory/ won't
-        
-  */
-  
-  // Test your regex before deploying! https://regex101.com/r/PjK1bJ/1
-  
-  logMe("START killByName()");
-  
-  // kill everything except Admin & Pastoral
-  var managers = ["Cheryl", "Mike", "Cath", "Eric"];
-  
-  var keepPatterns = [/(Admin|Pastoral)/];
-  var killPatterns = [/(^Copy of SUB|Subject Year 00|Select a student|HOPE OR IGCSE)/];
-  
-  var forReal = true; // set true to actually delete the sheets matched, false to view them
-  
-  return keepKillPortfolioSheets(keepPatterns, killPatterns, forReal);  
-  logMe("END killByName()");
-}
-
-function keepAdminPastoralKillAllSubjects() {
-  console.log("START keepAdminPastoralKillAllSubjects()");
-  
-  // kill everything except Admin & Pastoral
-  var keepPatterns = [/(Admin|Pastoral)/];
-  var killPatterns = [/.*/];
-  var forReal = false; // set true to actually delete the sheets matched, false to view them
-  
-  return keepKillPortfolioSheets(keepPatterns, killPatterns, forReal);
-}
-
-function keepKillPortfolioSheets(keepPatterns, killPatterns, forReal) {
-  if (forReal === undefined) {
-    forReal = false;
-  }
-  
-  console.log("START keepKillPortfolioSheets(%s, %s, %s)", keepPatterns, killPatterns, forReal);
-  
-  var students = getStudents();
-  var selectedStudentEmails = getEmailsToUpdate();
-  
-  var sheetsKilled = [];
-  
-  for (var i = 0; i < students.length; i++) {
-    if (selectedStudentEmails.indexOf( students[i].email ) == -1) continue;
-
-    var ss = SpreadsheetApp.openById( students[i].fileid );
-    console.warn("[%s] Checking for unwanted sheets to kill", students[i].fullname);
-    
-    console.warn("keepSheets: %s, killSheets:", keepPatterns, killPatterns);
-    var thisSheetKills = keepKillSheets(ss, keepPatterns, killPatterns, forReal);
-    
-    // is this sheet in the 'killed' list?
-    thisSheetKills.forEach(function (sheetName, j) {
-      if (sheetsKilled.indexOf(sheetName) == -1) {
-        sheetsKilled.push(sheetName);
-      }
-    });
-    grabPortfolioTabsAndGrades(students[i]);
-  }
-  if (sheetsKilled.length == 0) {
-    logMe("SUMMARY: No sheets deleted");
-  } else {
-    logMe("SUMMARY: deleted " + sheetsKilled.join(", "));
-  }
-  console.log("END keepKillPortfolioSheets()");
-  
-  return sheetsKilled;
-}
-
-function keepKillSheets(ss, keepPatterns, killPatterns, forReal) {
-  if (keepPatterns === undefined || killPatterns === undefined) {
-    console.error("keepKillSheets called with incorrect parameters - aborted");
-    return false;
-  }
-  
-  if (forReal === undefined) {
-    forReal = false; 
-  }
-  
-  var sheets = ss.getSheets();
-  
-  var sheetsKilled = [];
-  
-  // kill all the sheets we DON'T want, unless they match keepPatterns
-  sheets.forEach(function (s, i) {
-    var sheetName = s.getName();
-    var keep = false;
-    var kill = false; 
-    
-    keepPatterns.forEach(function (pattern, j) {
-      
-      if(sheetName.match(pattern) ) {
-        keep = true;
-        console.log ("[%s] '%s' found in sheetName '%s', adding KEEP tag", ss.getName(), pattern, sheetName);
-        
-      } else {
-        console.log ("'%s' not found in sheetName '%s', no KEEP tag", pattern, sheetName); 
-      }
-    });
-    
-    if (! keep) {
-    
-      killPatterns.forEach(function (pattern, j) {
-        
-        if(sheetName.match(pattern) ) {
-          kill = true;
-          console.log ("'%s' found in sheetName '%s', adding KILL tag", pattern, sheetName); 
-        } else {
-          console.log ("'%s' not found in sheetName '%s', no KILL tag", pattern, sheetName); 
-        }
-        
-      });
-    }
-    
-    if (kill && ! keep) {
-      sheetsKilled.push(sheetName);
-      
-      if (forReal) {
-        ss.deleteSheet(s);  // (UN) COMMENT THIS LINE TO (USE) TEST
-        logMe ("KILL: Deleted sheet " + sheetName + " from file " + ss.getName());
-      }
-    }
-    
-  });
-  
-  return sheetsKilled;
-}
 
 
 // wrapper to move newly shared files to Reportbooks folder 
