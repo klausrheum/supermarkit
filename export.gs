@@ -162,8 +162,8 @@ function updateIndividualReportTab(ss) {
   Logger.log(indRepSheet.getName());
   var formulas, styles;
   
-  formulas = temSubSheet.getRange("A10:P11").getFormulas();
-  indRepSheet.getRange("A10:P11").setFormulas(formulas);
+  formulas = temSubSheet.getRange("A10:S11").getFormulas();
+  indRepSheet.getRange("A10:S11").setFormulas(formulas);
   indRepSheet.getRange("B10:B11").setFormulas([["=B7"],["=B8"]])  
   Logger.log(formulas);
   
@@ -358,7 +358,6 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             rbRepSheet.getRange("B4").setValue(student.fullname);
             
             
-            //logIt(rowEmail + ": before update/refresh", meta, "C"); // DELETEME
             // SpreadsheetApp.flush();
             
             var updated = false;
@@ -375,7 +374,6 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
                 throw new Error(message);
               };
             }
-            //logIt(rowEmail + ": after update/refresh", meta, "C"); // DELETEME
             
             
             // copy grades data
@@ -397,6 +395,8 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
                 console.log("Clearing percentages for %s", tabName);
               }
             }
+            
+            wipeBlankColumns(portfolioSheet);
             
 
             // add Comment
@@ -455,6 +455,40 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   // gradeSheet.getRange("Z7:AB46").setValues(replacementRows);
   
 }
+
+function TEST_wipeBlankColumns() {
+  var ss = SpreadsheetApp.openById('19ykmvMZb3Kf20fpJOn0pdtUa8QL3_AoM3YCNOYe10Xw');
+  var portfolioSheet = ss.getSheetByName('Mathematics');
+  wipeBlankColumns(portfolioSheet);
+}
+
+function wipeBlankColumns(portfolioSheet) {
+  // FIXME should shuffle columns leftwards
+  // wipe out title & class average if grade is blank
+  var gradesRange = "F6:S11";
+  var values = portfolioSheet.getRange(gradesRange).getValues();
+  var width = values[0].length;
+  var gradeLetterRow = 5;
+  for (var c = 0; c < width; c++) {
+    
+    var cellValue = values[gradeLetterRow][c];
+    
+    if (cellValue === '') {
+      Logger.log("Blank");
+      // clear this column
+      for (var r = 0; r < values.length; r++) {
+        values[r][c] = '';
+      }
+    } else {
+      // do nothing
+      Logger.log("Value");
+    }
+    
+  }
+  portfolioSheet.getRange(gradesRange).setValues(values);
+  Logger.log(values);
+}            
+
 
 function getPortfolioFile(student) {
   var portfolioFile = "";
