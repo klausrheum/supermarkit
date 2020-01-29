@@ -286,18 +286,6 @@ function listCourseWorks(courseId) {
   return courseWorks;
 }
 
-function TEST_importGrades() {
-  // Y2026 CS JKw
-  var rbId = "1hTH0yXlUSopGEJ7r8I9K4hyGDieZpGdzuyQhB0m-frM";  
-  var courseId = "35753904788";
-  
-//  // Y2025 ICT 
-//  var rbId = "1BijeGY49S0amD3u-eePjz8iWBwH1sEc7QE_yADzVzgQ";  
-//  var courseId = "16052292479";
-  
-  importGrades(rbId, courseId);
-}
-
 function TEST_getEmailIds() {
   var courseId = "35753904788";
   var emailIds = getEmailIds(courseId);
@@ -318,12 +306,27 @@ function getEmailIds(courseId) {
   return emailIds;
 }
 
+function TEST_importGrades() {
+  // Y2022 CS10 JKw
+  var rbId = "1OK5U2yySrs3zZmkf-yAi4AuLtc4D76g57KK8sDPpqgU";  
+  var courseId = "16052527003";
+  
+//  // Y2025 ICT 
+//  var rbId = "1BijeGY49S0amD3u-eePjz8iWBwH1sEc7QE_yADzVzgQ";  
+//  var courseId = "16052292479";
+  top.META.SEM = "Jun2020";
+  top.FILES.RBTRACKER = "1Z4tc9AsmpuRgZ88puLCANMrr7hgvUTtMrlYenRcEZWg";
+  importGrades(rbId, courseId);
+}
+
 function importGrades(rbId, courseId) {
 
   var titleRegex = / REP ?([0-9]*)%?/;
   var dueYear = top.META.SEM.slice(-4); // 2019;
   var dueMonth = top.META.SEM.slice(0,-4);
   var dueMonths;
+  var message = "importGrades for 6 months up to " + dueMonth + " " + dueYear;
+  logMe(message);
   
   if (dueMonth === "Jun") {
     dueMonths = [1, 2, 3, 4, 5, 6];
