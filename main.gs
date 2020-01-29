@@ -45,17 +45,18 @@ var top = {
   // DELETE? "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
   META: {
-    "SEM": "Dec2019"  // select a RB from list in FILES
+    "SEM": ""  // eg top.META.SEM = "Dec2019" select a RB from list in FILES
   },
   
   FILES: {
     // reportbook trackers in semester order: rb(Dec|Jun)\d{4}
-    "rbDec2018": "1D3OEcKrRIWpJmopP07u-KWh6sQHae2Q3dSTzo6uMFVc",
-    "rbJun2019": "1JSJDpMOWQ766EDZjlKz_d2pxzNTNe_NT15JiI3WMuQE",
-    "rbDec2019": "1gajYqRDtQaYgknbkFtWkPBjhnJXOhe3Lc2cP8X--F8c",
+    
+    //"rbDec2018": "1D3OEcKrRIWpJmopP07u-KWh6sQHae2Q3dSTzo6uMFVc",
+    //"rbJun2019": "1JSJDpMOWQ766EDZjlKz_d2pxzNTNe_NT15JiI3WMuQE",
+    //"rbDec2019": "1gajYqRDtQaYgknbkFtWkPBjhnJXOhe3Lc2cP8X--F8c",
 
     // will become whichever is current
-    "RBTRACKER": "",
+    "RBTRACKER": "",  // top.FILES.RBTRACKER = "rbDec2019"
     
     // holds portfolio page templates
     "RBTEMPLATES": "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys",
@@ -149,9 +150,6 @@ var top = {
     ADMINATTRIBUTES:      "B13:B21"
   }
 };
-
-// change this with each new semester (or pick from a list?)
-top.FILES.RBTRACKER = top.FILES['rb' + top.META.SEM];
 
 
 if (TESTING) {

@@ -7,7 +7,11 @@
 */
 
 function TEST_updateReportbookClassrooms() {
+  if (top.FILES.RBTRACKER == "") {
+    top.FILES.RBTRACKER = '1cB8IymnNEg2SCBiWQXdzdYIAfFAOi2bKHwQ5v3dsuyU'; // Jun2000 - fake Reportbook Tracker for testing purposes only
+  }
   var rb = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  
   var sheet = rb.getSheetByName(top.SHEETS.REPORTBOOKS);
   bRange = sheet.getDataRange().getValues();
   Logger.log(bRange.length);
