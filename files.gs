@@ -56,7 +56,7 @@ function keepKillPortfolioSheets(keepPatterns, killPatterns, forReal) {
     forReal = false;
   }
   
-  console.log("START keepKillPortfolioSheets(%s, %s, %s)", keepPatterns, killPatterns, forReal);
+  //logMe("START keepKillPortfolioSheets keep: " + keepPatterns + ", kill: " + killPatterns + " forReal: " + forReal);
   
   var students = getStudents();
   var selectedStudentEmails = getEmailsToUpdate();
@@ -81,9 +81,13 @@ function keepKillPortfolioSheets(keepPatterns, killPatterns, forReal) {
     grabPortfolioTabsAndGrades(students[i]);
   }
   if (sheetsKilled.length == 0) {
-    logMe("SUMMARY: No sheets deleted");
+    logMe("SUMMARY: No sheets deleted.");
   } else {
-    logMe("SUMMARY: deleted " + sheetsKilled.join(", "));
+    if (forReal) {
+      logMe("SUMMARY: deleted " + sheetsKilled.join(", "));
+    } else {
+      logMe("SUMMARY: found " + sheetsKilled.join(", "));
+    }
   }
   console.log("END keepKillPortfolioSheets()");
   
@@ -156,7 +160,9 @@ function keepKillSheets(ss, keepPatterns, killPatterns, forReal) {
       
       if (forReal) {
         ss.deleteSheet(s);  // (UN) COMMENT THIS LINE TO (USE) TEST
-        logMe ("KILL: Deleted sheet " + sheetName + " from file " + ss.getName());
+        logMe ("DELETED sheet " + sheetName + " in file " + ss.getName());
+      } else {
+        logMe ("FOUND sheet " + sheetName + " in file " + ss.getName()); 
       }
     }
     

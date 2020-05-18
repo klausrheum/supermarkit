@@ -210,6 +210,9 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   var subYear = srcName.substring(0,5);
   var tabName = rbss.getSheetByName(top.SHEETS.OVERVIEW)
   .getRange(top.RANGES.OVERVIEWSUBJECT).getValue();
+
+  var problems = [];
+
   logMe('EXPORT: ' + srcName);
 
   var sub = tabName;
@@ -296,13 +299,13 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         }
       }
       
+      
       if (exportOverride != "Y" || ["Y", "y"].indexOf(rowExportYN) > -1) { 
         var message = "["+subYear+"] START: " + rowFullname + " (" + tabName + ")";
         logMe(message);
         
         // count grades entered...
         var rowScores = [];
-        var problems = [];
         
         for (var g = 0; g < rowGrades.length; g++) {
           if (rowGrades[g] != "") {
@@ -438,19 +441,22 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             
             
           }
-          var problemsText = "" + problems.length + " problem(s)";
-          logMe("[" + subYear + "] END: ", problemsText);
           
         } else {
           var newTimestamp = "" + new Date();
-          console.log("No Portfolio, ignored");
+          var message = "MISSING: No Portfolio file, skipping";
+          problems.push(message);
+          logMe(message);
           gradeSheet.getRange(r+7, 26, 1, 3).setValues([[newTimestamp, "No Portfolio, ignored", "N"]]);
-        }        
+        }
       }
     }
   }
   // gradeSheet.getRange("Z7:AB46").setValues(replacementRows);
-  
+  if (problems.length > 0) {
+    var problemsText = " " + problems.length + " problem(s)";
+    logMe("PROBLEMS: "+ srcName + problemsText);
+  }
 }
 
 function TEST_wipeBlankColumns() {
