@@ -240,8 +240,6 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
   }
   var rows = gradeSheet.getRange("A7:AB46").getValues();
   var replacementRows = [];
-
-  //Logger.log(namesGrades, meta);
   
   var yesRows = rows.filter(
     function yes(arr) {
@@ -249,14 +247,8 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
     }
   );
   
-  // perform once per RB, not once per student!
-  //if (yesRows.length > 0 || ) {
   updateIndividualReportTab(rbss);
-  //} 
   
-  //console.log("%d rows marked Y %s", yesRows.length, exportOverride == "ALL" ? " but OVERRIDE=true" : "", meta);
-  
-  // loop through students marked for export ie col Z="Y":
   for (var r=0; r<rows.length; r++) {
     
     var exported = false;
@@ -310,6 +302,8 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         
         // count grades entered...
         var rowScores = [];
+        var problems = [];
+        
         for (var g = 0; g < rowGrades.length; g++) {
           if (rowGrades[g] != "") {
             rowScores.push(rowGrades[g]); 
@@ -319,18 +313,21 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
         // ... 2 or fewer grades ?
         if (rowScores.length <= 2) {
           var message = "FEW? " + rowScores.length.toString() + ' grade(s) ' + rowFullname + " (" + tabName + ") ";
+          problems.push(message);
           logMe(message, 'warn');
         }
 
         // ... 10 or more grades ?
         if (rowScores.length >= 10) {
           var message = 'MANY? ' + rowScores.length.toString() + ' grade(s) ' + rowFullname + " (" + tabName + ") ";
+          problems.push(message);
           logMe(message, 'warn');
         }
         
         // ... average score less than 30% ?
         if (rowAvgPercent < 0.30) {
           var message = "LOW? " + rowFullname + " (" + tabName + ") " + ' graded ' + rowAvgGrade + ' (' + Math.round(rowAvgPercent*100) + ' = ' + rowScores.join(" + ") + ")";
+          problems.push(message);
           logMe(message, 'warn'); 
         }
 
@@ -371,6 +368,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
               if (attempt > 10) {
                 var message = "Name mis-match? Cannot select " + student.fullname + " in cell B4 of 'Individual Report' tab of file: " + srcName;
                 logMe( message, 'warn' );
+                problems.push(message);
                 throw new Error(message);
               };
             }
@@ -440,16 +438,15 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             
             
           }
+          var problemsText = "" + problems.length + " problem(s)";
+          logMe("[" + subYear + "] END: ", problemsText);
           
         } else {
           var newTimestamp = "" + new Date();
           console.log("No Portfolio, ignored");
           gradeSheet.getRange(r+7, 26, 1, 3).setValues([[newTimestamp, "No Portfolio, ignored", "N"]]);
-        }
-        
-        logMe("[" + subYear + "] END: ", student.fullname);
+        }        
       }
-      
     }
   }
   // gradeSheet.getRange("Z7:AB46").setValues(replacementRows);

@@ -35,7 +35,7 @@ function logMe(message, level) { // wrapper
   }
   
   if (alertLevel >= 1) {
-      logToDoc(message); // this keeps stopping the script      
+      //logToDoc(message); // this keeps stopping the script      
       logToSheet(message);  // log 'info' to the 'Log' tab
   }
   
