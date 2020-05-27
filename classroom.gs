@@ -196,13 +196,18 @@ function createMissingReportbooks() {
           var email       = rbRow["ownerEmail"]
           var teacherName = rbRow["ownerName"];
           var subjectName = rbRow["Subject Name in Report"];
+          var reportPageFooter = rbRow["Report page footer"];
           
           if (newRbId && newRbId.length > 10) {
             rbRows[row]["rbId"] = newRbId;
             
             // update tracker row with rbId
             rbSheet.getRange(row + 2, 1).setValue(newRbId);
+
+            // give teacher EDIT access
             addEditor(newRbId, email);
+
+            // update subjectName & teacherName
             updateReportbookMetadata(newRbId, subjectName, teacherName);
             
             var classroomPermission = havePermission(rbRow["teacherFolder"]);
@@ -220,6 +225,40 @@ function createMissingReportbooks() {
     }
   }
   return rbRows;
+}
+
+function TEST_addPastoralPageFooter() {
+  //  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  //  var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
+  
+  var text = "Between March and June 12  HOPE International School's physical campuses were closed as part of government mandated national school closures in response to the Covid-19 pandemic. During the months of March through June students continued to be able to access learning materials and class time with teachers via online learning. Items assessed after this date were completed off site.";
+  var a1Notation = "B29:H29";
+  
+  var pfId = "1vu2mSTWnq2w28aPCWQYymsouuGD-3HwS6mhhjwym4mQ"; // SIMPSON, Lisa
+  var pf = SpreadsheetApp.openById(pfId);
+  var pastoralSheet = pf.getSheetByName("Pastoral"); 
+  
+  addFooter(pastoralSheet, a1Notation, text);
+}
+
+function TEST_addReportPageFooter() {
+  var text = "* Assessments marked * were completed after school closure. Given the challenges associated with distance learning and assessing, teachers are unable to validate whether missing or uncharacteristic assessment items are a consequence of technical challenges or lack of student application.";
+  var a1Notation = "B28:R28";
+  
+  var pfId = "10ttWrNRAbyjK22oJzFq5h3Wi4SmM9IYqBotfAkmQP5s"; // BAEK
+  var pf = SpreadsheetApp.openById(pfId);
+  var subSheet = pf.getSheetByName("Christian Perspectives"); 
+  addFooter(subSheet, a1Notation, text);
+}
+
+function addFooter(sheet, a1Notation, text) {
+  Logger.log(sheet.getRange(a1Notation).getValue());
+  
+  sheet.getRange(a1Notation)
+  .mergeAcross()            
+  .setHorizontalAlignment("left")            
+  .setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP)
+  .setValue(text);
 }
 
 function TEST_addEditor() {
@@ -244,11 +283,17 @@ function TEST_updateReportbookMetadata() {
 function updateReportbookMetadata(rbFileId, subjectName, teacherName) {
   var ss = SpreadsheetApp.openById(rbFileId);
   Logger.log ("Updating OVERVIEW metadata for " + ss.getName() );
+  
   var sheet = ss.getSheetByName(top.SHEETS.OVERVIEW);
   var gradesText = "GRADING SYSTEM (or replace column B with your own)";
-  Logger.log(sheet.getRange(top.RANGES.OVERVIEWSUBJECT).setValue(subjectName) );
+  
+  var subjectNameResult = sheet.getRange(top.RANGES.OVERVIEWSUBJECT).setValue(subjectName);
+  Logger.log( subjectNameResult );
+  
   sheet.getRange(top.RANGES.OVERVIEWTEACHER).setValue(teacherName);
   sheet.getRange(top.RANGES.OVERVIEWGRADETITLE).setValue(gradesText).mergeAcross();
+
+  // JK updateRBFormulas(ss);
   Logger.log("Updated reportbook metadata: ");
 }
 

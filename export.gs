@@ -63,124 +63,7 @@ function exportAllRBs() {
   logMe("exportAllRBs: END " + endTime + " in " + elapsedTime + " secs", 'warn');
 }
 
-function getRbIdsToExport() {
-  // build list of RBs ticked for export
-  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  var rbSheet = rbTracker.getSheetByName(top.SHEETS.REPORTBOOKS);
-  var lastRow = rbSheet.getLastRow();
-  
-  var rawIds = rbSheet.getRange(2, top.COLS.RBIDSTOEXPORT, lastRow, 1).getValues();
-  
-  var idsToExport = [];
-  var thisId;
-  
-  for (var i = 0; i < rawIds.length; i++) {
-    thisId = rawIds[i][0];
-    if (thisId.length > 0) {
-      idsToExport.push(thisId); 
-    }
-  }
-  return idsToExport;
-}
-
-function getEmailsToUpdate() {
-  // build list of students ticked for export
-  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
-  var lastRow = pfSheet.getLastRow();
-  
-  var rawIds = pfSheet.getRange(2, top.COLS.EMAILSTOEXPORT, lastRow, 1).getValues();
-  Logger.log(rawIds);
-  var studentsToUpdate = [];
-  var thisId;
-  for (var i = 0; i < rawIds.length; i++) {
-    thisId = rawIds[i][0];
-    if (thisId.length > 0) {
-      studentsToUpdate.push(thisId); 
-    }
-  }
-  Logger.log("studentsToUpdate");
-  Logger.log(studentsToUpdate);
-  return studentsToUpdate;
-}
-
-
-
-function createTestStudent() {
-    createStudentFullInfo(bobby);
-}
-
-function deleteTestStudent() {
-    deleteStudent(bobby);
-}
-
-function test_updateIndividualReport() {
-  var aaaId = "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y";
-  var mat09 = "1SQNPHhjrMYbpxJ3d7nN8vcMH4teF_DPGdsWxg4655Sc";
-  var aaaSs = SpreadsheetApp.openById(aaaId);
-  
-  // clear B1: ICT Year 9 (Mr Kershaw)
-  aaaSs
-  .getSheetByName("Individual report")
-  .getRange("B11").clear();
-  
-  // clear B10: =B7
-  aaaSs
-  .getSheetByName("Individual report")
-  .getRange("B10").clear();
-  
-  updateIndividualReportTab( aaaSs );
-  
-  var val = aaaSs
-  .getSheetByName("Individual report")
-  .getRange("B10").getFormula();
-  
-  // B1 should now contain ICT Year 9 (Mr Kershaw)
-  if (val.indexOf("(") == -1) {
-    console.error("FAIL: updateGradeFormulas cell B1");
-  }
-
-  // B10 should now contain =B7 
-  if (val != "=B7") {
-    console.error("FAIL: updateGradeFormulas cell B10");
-  }
-}
-
-function updateIndividualReportTab(ss) {
-  var meta = {'tag': arguments.callee.name, "dest": "L"};
-  var rbName = ss.getName();
-  Logger.log(rbName);
-  
-  var templateSs = SpreadsheetApp.openById(top.FILES.RBTEMPLATES);
-  var temName = templateSs.getName();
-  Logger.log(temName);
-  
-  // TODO DELETE var rbTemplatesFileId = "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys";
-  
-  var temSubSheet = templateSs.getSheetByName(top.SHEETS.SUB);
-  var indRepSheet = ss.getSheetByName(top.SHEETS.INDREP);
-  Logger.log(indRepSheet.getName());
-  var formulas, styles;
-  
-  formulas = temSubSheet.getRange("A10:S11").getFormulas();
-  indRepSheet.getRange("A10:S11").setFormulas(formulas);
-  indRepSheet.getRange("B10:B11").setFormulas([["=B7"],["=B8"]])  
-  Logger.log(formulas);
-  
-  indRepSheet.getRange("B1:B1").setFormula('=Overview!B1 & " (" & Overview!B2 & ")"');  
-  
-  styles = temSubSheet.getRange("B1:B1").getTextStyles();
-  indRepSheet.getRange("B1:B1").setTextStyles(styles);  
-  
-  indRepSheet.getRange("B6:X11")
-  .setHorizontalAlignment("left")
-  .setVerticalAlignment("bottom");
-  //SpreadsheetApp.flush();
-  
-  createChart(indRepSheet);
-}
-
-function text_AAAExport() {
+function TEST_exportStudentsFromRB() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   
   var rbIds = getRbIds();
@@ -349,7 +232,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             logIt(tabName + " already exists", meta);
             portfolioSheet = portfolioFile.getSheetByName(tabName);
           }
-          
+                    
           //logIt(rowEmail + ": before exportOverride:" + exportOverride, meta, "C"); // DELETEME
           if ( exportOverride != "NONE" ) {
 
@@ -397,8 +280,8 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
               }
             }
             
+            // is this still needed?
             wipeBlankColumns(portfolioSheet);
-            
 
             // add Comment
             portfolioSheet.getRange("I4").setValue(rowComment);
@@ -406,12 +289,10 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             // clear out unused Titles otherwise arrayformula won't display
             updateValues(portfolioSheet, "F6:6", ["Title"], [""]);
             
-            // delete grading info for non-graded subjects
-//            var useUngradedTemplate = ["ELL", "VIA"].indexOf(tabName) > -1;
-//            if (useUngradedTemplate) {
-//              portfolioSheet.getRange("B6:Q11").setValue("");  
-//              portfolioSheet.getRange("B6").setValue("This subject is not formally assessed");  
-//            }
+            // merge & wrap footer area, add text
+            var footer = "* Assessments marked * were completed after school closure. Given the challenges associated with distance learning and assessing, teachers are unable to validate whether missing or uncharacteristic assessment items are a consequence of technical challenges or lack of student application.";
+            var a1Notation = top.RANGES.REPORTFOOTER;
+            addFooter(portfolioSheet, a1Notation, footer);
             
             grabPortfolioTabsAndGrades(student);
             
@@ -465,35 +346,6 @@ function TEST_wipeBlankColumns() {
   wipeBlankColumns(portfolioSheet);
 }
 
-//function wipeBlankColumns(portfolioSheet) {
-//  // FIXME should shuffle columns leftwards
-//  
-//  // wipe out title & class average if grade is blank
-//  var gradesRange = "F6:S11";
-//  var values = portfolioSheet.getRange(gradesRange).getValues();
-//  var width = values[0].length;
-//  var gradeLetterRow = 5;
-//  for (var c = 0; c < width; c++) {
-//    
-//    var cellValue = values[gradeLetterRow][c];
-//    
-//    if (cellValue === '') {
-//      Logger.log("Blank");
-//      // clear this column
-//      for (var r = 0; r < values.length; r++) {
-//        values[r][c] = '';
-//      }
-//    } else {
-//      // do nothing
-//      Logger.log("Value");
-//    }
-//    
-//  }
-//  portfolioSheet.getRange(gradesRange).setValues(values);
-//  Logger.log(values);
-//}            
-
-
 function wipeBlankColumns(portfolioSheet) {
   // FIXME should shuffle columns leftwards
   
@@ -522,6 +374,125 @@ function wipeBlankColumns(portfolioSheet) {
   Logger.log(values);
 }            
 
+
+function getRbIdsToExport() {
+  // build list of RBs ticked for export
+  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var rbSheet = rbTracker.getSheetByName(top.SHEETS.REPORTBOOKS);
+  var lastRow = rbSheet.getLastRow();
+  
+  var rawIds = rbSheet.getRange(2, top.COLS.RBIDSTOEXPORT, lastRow, 1).getValues();
+  
+  var idsToExport = [];
+  var thisId;
+  
+  for (var i = 0; i < rawIds.length; i++) {
+    thisId = rawIds[i][0];
+    if (thisId.length > 0) {
+      idsToExport.push(thisId); 
+    }
+  }
+  return idsToExport;
+}
+
+function getEmailsToUpdate() {
+  // build list of students ticked for export
+  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var pfSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
+  var lastRow = pfSheet.getLastRow();
+  
+  var rawIds = pfSheet.getRange(2, top.COLS.EMAILSTOEXPORT, lastRow, 1).getValues();
+  Logger.log(rawIds);
+  var studentsToUpdate = [];
+  var thisId;
+  for (var i = 0; i < rawIds.length; i++) {
+    thisId = rawIds[i][0];
+    if (thisId.length > 0) {
+      studentsToUpdate.push(thisId); 
+    }
+  }
+  Logger.log("studentsToUpdate");
+  Logger.log(studentsToUpdate);
+  return studentsToUpdate;
+}
+
+
+
+function createTestStudent() {
+    createStudentFullInfo(bobby);
+}
+
+function deleteTestStudent() {
+    deleteStudent(bobby);
+}
+
+function test_updateIndividualReport() {
+  var aaaId = "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y";
+  var mat09 = "1SQNPHhjrMYbpxJ3d7nN8vcMH4teF_DPGdsWxg4655Sc";
+  var aaaSs = SpreadsheetApp.openById(aaaId);
+  
+  // clear B1: ICT Year 9 (Mr Kershaw)
+  aaaSs
+  .getSheetByName("Individual report")
+  .getRange("B11").clear();
+  
+  // clear B10: =B7
+  aaaSs
+  .getSheetByName("Individual report")
+  .getRange("B10").clear();
+  
+  updateIndividualReportTab( aaaSs );
+  
+  var val = aaaSs
+  .getSheetByName("Individual report")
+  .getRange("B10").getFormula();
+  
+  // B1 should now contain ICT Year 9 (Mr Kershaw)
+  if (val.indexOf("(") == -1) {
+    console.error("FAIL: updateGradeFormulas cell B1");
+  }
+
+  // B10 should now contain =B7 
+  if (val != "=B7") {
+    console.error("FAIL: updateGradeFormulas cell B10");
+  }
+}
+
+function updateIndividualReportTab(ss) {
+  // runs during exportStudentsFromRB
+  
+  var meta = {'tag': arguments.callee.name, "dest": "L"};
+  var rbName = ss.getName();
+  Logger.log(rbName);
+  
+  var templateSs = SpreadsheetApp.openById(top.FILES.RBTEMPLATES);
+  var temName = templateSs.getName();
+  Logger.log(temName);
+  
+  // TODO DELETE var rbTemplatesFileId = "1YyMyHCQeshm4bWnfiwC3DbRSWDw48PQv9I822oXU8ys";
+  
+  var temSubSheet = templateSs.getSheetByName(top.SHEETS.SUB);
+  var indRepSheet = ss.getSheetByName(top.SHEETS.INDREP);
+  Logger.log(indRepSheet.getName());
+  var formulas, styles;
+  
+  formulas = temSubSheet.getRange("A10:S11").getFormulas();
+  indRepSheet.getRange("A10:S11").setFormulas(formulas);
+  indRepSheet.getRange("B10:B11").setFormulas([["=B7"],["=B8"]])  
+  Logger.log(formulas);
+  
+  indRepSheet.getRange("B1:B1").setFormula('=Overview!B1 & " (" & Overview!B2 & ")"');  
+  
+  styles = temSubSheet.getRange("B1:B1").getTextStyles();
+  indRepSheet.getRange("B1:B1").setTextStyles(styles);  
+  
+  indRepSheet.getRange("B6:X11")
+  .setHorizontalAlignment("left")
+  .setVerticalAlignment("bottom");
+  //SpreadsheetApp.flush();
+  
+  createChart(indRepSheet);
+}
 
 function getPortfolioFile(student) {
   var portfolioFile = "";
@@ -782,11 +753,13 @@ function backupAllPastoralAdmin() {
   var selectedStudentEmails = getEmailsToUpdate();  
 
   for (var s = 0; s < top.students.length; s++) {
-    //if (s >= 30) break;
+    //if (s >= 5) break; // already limited by 🗹
+    
     var student = students[s];
     if (selectedStudentEmails.indexOf(student.email) > -1) {
       backupPastoralAdmin(student);
       pushExtraCurricularToPortfolio(student);
+      setPastoralPageFooter(student); // NEW
       grabPortfolioTabsAndGrades(student);
     }
   }  
@@ -815,6 +788,26 @@ function pushExtraCurricularToPortfolio(student) {
   pf.getSheetByName(top.SHEETS.ADMIN)
     .getRange(top.RANGES.ADMINEXTRACURRICULAR)
     .setValue(extra);
+}
+
+function setPastoralPageFooter(student) {
+  logMe('SET ' + student.fullname + ' Pastoral Footer');
+  
+  var rbTracker = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  var portfoliosSheet = rbTracker.getSheetByName(top.SHEETS.PORTFOLIOS);
+  var pf = SpreadsheetApp.openById(student.fileid);
+  var pfName = pf.getName();
+  
+  Logger.log("%s", student.fullname);
+  
+  var footer = portfoliosSheet
+  .getRange(student.row, top.COLS.PASTORALFOOTER)
+  .getValue();    
+  
+  var pastoralSheet = pf.getSheetByName(top.SHEETS.PASTORAL);
+  var a1Notation = top.RANGES.PASTORALFOOTER; // "B29:H29";
+  
+  addFooter(pastoralSheet, a1Notation, footer);
 }
 
 function test_backupPastoralAdmin() {

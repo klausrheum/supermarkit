@@ -15,7 +15,7 @@ function updateReportbooks() {
   for (var row = 0; row < rbRows.length; row++) {
     var rbRow = rbRows[row];
     var id = rbRow.rbId;
-    var geo2019sl = "1HV01YukUG42Gytg1Ve6fO1veFSudRCdKsU0Q9ph6_Xw";
+    //var geo2019sl = "1HV01YukUG42Gytg1Ve6fO1veFSudRCdKsU0Q9ph6_Xw";
     
     // skip empty rbIds
     if (! id || id.length < 2) { 
@@ -26,7 +26,7 @@ function updateReportbooks() {
 
     // SAFETY CATCH =============================
     
-    //if (row > 10) break; // stop after 10 reportbooks
+    //if (row > 2) break; // stop after n reportbooks
     
     // END SAFETY CATCH =========================
     
@@ -525,38 +525,39 @@ function updatePortfolioFormulas() {
 //}
 
 function updateRBFormulas(ss) {
-  logMe("FORMAT: Skip blanks, REP > weighting " + ss.getName(), 'log' );
+  logMe("FORMAT: Skip blanks, REP >> weighting " + ss.getName(), 'log' );
   
   var formulas = [
     {
-      // F6=if(istext(A6), index(Grades, match($G6*100,GradeRange,-1), 1),"")
-      "desc": "if the Last name column is empty, don't display a grade (eg E-)",
-      "sheet": "Grades", 
-      "cell": "F6", 
-      "range": "F7:F", 
-      "formula": '=if(istext(A6), index(Grades, match($G6*100,GradeRange,-1), 1),"")'
-    },
-    {
-      // G6=sum(arrayformula(iferror(($H$1:$X$1 / sumif($H6:$X6, "<>", $H$1:$X$1)) * (H6:X6 / $H$4:$X$4))))
-      "desc": "if the grade is blank, don't include it in the weighting denominator",
-      "sheet": "Grades", 
-      "cell": "G6", 
-      "range": "G7:G", 
-      "formula": '=sum(arrayformula(iferror(($H$1:$X$1 / sumif($H6:$X6, "<>", $H$1:$X$1)) * (H6:X6 / $H$4:$X$4))))'
-    },
-    {
-      "desc": "if the grade is blank, don't include it in the graph",
+      "desc": "replace REP20% with weighting 20%",
       "sheet": "Individual report",
-      "cell": "F8",
+      "cell": "B6",
       "range": "",
-      "formula": '=arrayformula(if(index(Grades!$H$7:$Y$46, match($B$4,Grades!$D$7:$D$46,0)) = "", "", iferror(index(Grades!$H$7:$Y$46, match($B$4,Grades!$D$7:$D$46,0))/PointValues)))'
-    },
-    {"desc": "replace REP20% with weighting 20%",
-     "sheet": "Individual report",
-     "cell": "B6",
-     "range": "",
-     "formula": '=arrayformula(REGEXREPLACE({Grades!D3:X3}, " REP ?([0-9]*%?)\\z", " weighting $1"))'
-    } 
+      "formula": '=arrayformula(REGEXREPLACE({Grades!D3:X3}, " REP ?([0-9]*%?)\\z", " weighting $1"))'
+    }, 
+//    {
+//      // F6=if(istext(A6), index(Grades, match($G6*100,GradeRange,-1), 1),"")
+//      "desc": "if the Last name column is empty, don't display a grade (eg E-)",
+//      "sheet": "Grades", 
+//      "cell": "F6", 
+//      "range": "F7:F", 
+//      "formula": '=if(istext(A6), index(Grades, match($G6*100,GradeRange,-1), 1),"")'
+//    },
+//    {
+//      // G6=sum(arrayformula(iferror(($H$1:$X$1 / sumif($H6:$X6, "<>", $H$1:$X$1)) * (H6:X6 / $H$4:$X$4))))
+//      "desc": "if the grade is blank, don't include it in the weighting denominator",
+//      "sheet": "Grades", 
+//      "cell": "G6", 
+//      "range": "G7:G", 
+//      "formula": '=sum(arrayformula(iferror(($H$1:$X$1 / sumif($H6:$X6, "<>", $H$1:$X$1)) * (H6:X6 / $H$4:$X$4))))'
+//    },
+//    {
+//      "desc": "if the grade is blank, don't include it in the graph",
+//      "sheet": "Individual report",
+//      "cell": "F8",
+//      "range": "",
+//      "formula": '=arrayformula(if(index(Grades!$H$7:$Y$46, match($B$4,Grades!$D$7:$D$46,0)) = "", "", iferror(index(Grades!$H$7:$Y$46, match($B$4,Grades!$D$7:$D$46,0))/PointValues)))'
+//    },
   ];
 
   updateFormulas(ss, formulas);

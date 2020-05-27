@@ -7,12 +7,6 @@
 
 var TESTING = false; // false/true
 
-function TESTtop() { 
-  var ss = SpreadsheetApp.openById(top.FILES.RBTRACKER);
-  Logger.log(ss.getName());
-  
-}
-
 // main.gs ===================================================
 // holds global objects for various doc IDs, eventually these 
 // will be part of the spreadsheet this is attached to...
@@ -101,6 +95,7 @@ var top = {
     OWNERID: 6,
     TEACHERFOLDER: 7,
     RBIDSTOEXPORT: 13, // replace this with getRBRows
+    REPORTFOOTER: 28,
     
     // Columns in PORTFOLIOS Sheet
     LASTNAME: 1,
@@ -127,13 +122,16 @@ var top = {
 
     PORTFOLIOLASTEXPORT:   13,
     PORTFOLIOTABSLIST:     14,
-    EXTRACURRICULARSUMMARY:24,
+    PASTORALFOOTER:        24,
+    EXTRACURRICULARSUMMARY:25,
     
   },
   
   RANGES: {
-    // Reportbooks
+    // RBTRACKER: Reportbooks
     COURSEIDS: "E:E",
+    
+    // RBTRACKER: Teachers
     TEACHERIDS: "A:A",
     TEACHERINFO: "A:C",
     
@@ -147,7 +145,9 @@ var top = {
     ADMINEXTRACURRICULAR: "B9",
     ADMINATTENDANCETOTAL: "B10",
     ADMINPASTORALCOMMENT: "B11",
-    ADMINATTRIBUTES:      "B13:B21"
+    ADMINATTRIBUTES:      "B13:B21",
+    PASTORALFOOTER:       "B29:H29",
+    REPORTFOOTER:         "B28:R28",
   }
 };
 
@@ -156,7 +156,6 @@ if (TESTING) {
   sheet = top.SHEETS.REPORTBOOKS = "Copy of Reportbooks";
 }
   
-
 var folderRB = "1SxM_NQ8ZsDzZPaZAhfdTXl7e21eFJBkk";
 var listRBs = "1EAW-XHHtA1gIFoXe3sruqTHXtKi07xBxP4oXbWObCgU";
 
@@ -174,9 +173,16 @@ var klaus = {
   "email": "classroom@hope.edu.kh"
   };
 
-var testRB = "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y";
-
+var testRBTRACKER = "1Z4tc9AsmpuRgZ88puLCANMrr7hgvUTtMrlYenRcEZWg"; // Jun2020
 var testStudentEmail = "tom.kershaw@students.hope.edu.kh";
+var currSS = SpreadsheetApp.getActiveSpreadsheet();
+Logger.log(currSS);
+
+if (!currSS) {
+  Logger.log('No current spreadsheet! Will use Jun2020');
+  top.FILES.RBTRACKER = testRBTRACKER;
+  Logger.log(top.FILES.RBTRACKER);
+};
 
 var template = {
   "titlesRow" : 3,
@@ -200,6 +206,11 @@ var template = {
 // l8CfwFCvGsROVdDJEXgiTvcG
 
 // var courses = listCourses(studentEmail);
+
+function TESTtop() { 
+  var ss = SpreadsheetApp.openById(top.FILES.RBTRACKER);
+  Logger.log(ss.getName());
+}
 
 function getRbIds() {
 
