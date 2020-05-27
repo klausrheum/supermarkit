@@ -407,6 +407,7 @@ function updateStudentRow(student) {
 
   student.fullname = sheet.getRange(student.row, top.COLS.FULLNAME).getValue();
   student.filename = sheet.getRange(student.row, top.COLS.FILENAME).getValue();
+  student.aa00 = sheet.getRange(student.row, top.COLS.YEAR).getValue();
 
   if (! student.fileid || student.fileid.length < 10) {
     student = createPortfolioFile(student);
@@ -427,6 +428,7 @@ function TEST_createPortfolioFile() {
   student.firstname = "Test";
   student.lastname = "Student";
   student.email = "test.student@hope.edu.kh";
+  student.aa00 = "SR";
   student.fullname = student.firstname + " " + student.lastname;
   
   student = createPortfolioFile(student);
@@ -470,11 +472,16 @@ function createPortfolioFile(student) {
     student.fileid = student.file.getId();
     
     // copy the Pastoral sheet from the Templates document
-    var pastoralSheetName = "Pastoral";  
-    var pastoralTemplateSheet = templatesId.getSheetByName(pastoralSheetName);
+    var aa00 = student.aa00.slice(0,2);
+    if (['PP', 'SR'].indexOf(aa00) == -1) {
+      aa00 = 'PP'; // default value
+    }
+    var pastoralMasterName = 'Pastoral' + aa00;
+    var pastoralSheetName = top.SHEETS.PASTORAL; // "Pastoral";  
+    var pastoralTemplateSheet = templatesId.getSheetByName(pastoralMasterName);
     
     var pastoralSheet = pastoralTemplateSheet.copyTo(student.file)
-    .setName("Pastoral")
+    .setName(pastoralSheetName)
     .getRange("B4").setValue(student.fullname);
     
     

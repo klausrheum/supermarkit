@@ -107,7 +107,7 @@ var top = {
     FIRSTNAME: 2,
     EMAIL: 3,
     FULLNAME: 4,
-    YEAR: 5,
+    YEAR: 5, // AA00
     FILENAME: 6,
     FILEID: 7,
     LINK: 8,
@@ -363,6 +363,7 @@ function importGrades(rbId, courseId) {
     
     var column = startCol + i;
     var cw = filteredCourseWorks[i];
+    cw.title = cw.title.trim();
     
     // set date
     var dateText = cw.dueDate.day + '/' + cw.dueDate.month + '/' + cw.dueDate.year;
