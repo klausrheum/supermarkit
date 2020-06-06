@@ -5,7 +5,7 @@
 4. Update top.META.SEM to match (without the rb)
 */
 
-var TESTING = false; // false/true
+var TESTING = false; // false/true 
 
 // main.gs ===================================================
 // holds global objects for various doc IDs, eventually these 

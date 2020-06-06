@@ -42,11 +42,11 @@ function exportAllRBs() {
     // SAFETY CATCH
     
     var rbId = rbIds[r];
-    Logger.log(rbId);
-    var rbss = SpreadsheetApp.openById(rbId);
-    var rbName = rbss.getName();
+    // logMe(rbId);
 
     if (idsToExport.indexOf(rbId) > -1) {
+      var rbss = SpreadsheetApp.openById(rbId);
+      var rbName = rbss.getName();
       console.info("%s is ticked for export", rbName);
       exportStudentsFromRB(rbss, studentsToUpdate);
   
