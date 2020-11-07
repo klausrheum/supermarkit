@@ -1,3 +1,15 @@
+// **************************************************************************
+//   W  A  R  N  I  N  G       W  A  R  N  I  N  G       W  A  R  N  I  N  G
+//
+//                             Do NOT click 
+//
+//                  'Enable new Apps Script v8 runtime'
+// 
+//             It is incompatible and will break everything!
+//
+//   W  A  R  N  I  N  G       W  A  R  N  I  N  G       W  A  R  N  I  N  G
+// **************************************************************************
+
 /*
 1. Create a copy of the Reportbooks Tracker
 2. Copy its ID
@@ -173,7 +185,7 @@ var klaus = {
   "email": "classroom@hope.edu.kh"
   };
 
-var testRBTRACKER = "1Z4tc9AsmpuRgZ88puLCANMrr7hgvUTtMrlYenRcEZWg"; // Jun2020
+var testRBTRACKER = "1Q9rH_hexTkgsT07vJ80pIV0g8JgLIulxZEin0cyTLgA"; // Dec2020
 var testStudentEmail = "tom.kershaw@students.hope.edu.kh";
 var currSS = SpreadsheetApp.getActiveSpreadsheet();
 Logger.log(currSS);

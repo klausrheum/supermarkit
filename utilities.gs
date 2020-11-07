@@ -154,7 +154,7 @@ function fileExists(fileName, folderId) {
      
         
       } else {
-        errors.push('File: ' + fileName + " not found in folder " + folderName);
+        errors.push('File: ' + fileName + " not found in folder " + folderName + " ");
         console.error( errors[errors.length - 1] );
       } 
     } catch(e) { 

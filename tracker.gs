@@ -323,7 +323,7 @@ function createStudents() {
 
 function createStudent(student) {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
-  updatePortfolioFormulas();
+  updatePortfoliosSheetFormulas();
   // already exists?
   if (getStudent(student).row > 0) {
     updateStudentRow(student);
@@ -389,7 +389,7 @@ function createPortfolioRow(student) {
     studentRow = sheet.getLastRow();
     student.row = studentRow;
     
-    updatePortfolioFormulas();
+    updatePortfoliosSheetFormulas();
   }
 
   updateStudentRow(student);
@@ -403,7 +403,7 @@ function updateStudentRow(student) {
   .openById(top.FILES.RBTRACKER)
   .getSheetByName(top.SHEETS.PORTFOLIOS);
   
-  // was updatePortfolioFormulas(student.row);
+  // was updatePortfoliosSheetFormulas(student.row);
 
   student.fullname = sheet.getRange(student.row, top.COLS.FULLNAME).getValue();
   student.filename = sheet.getRange(student.row, top.COLS.FILENAME).getValue();

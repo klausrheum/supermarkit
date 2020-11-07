@@ -184,43 +184,48 @@ function createMissingReportbooks() {
       // look for missing rbIds
       if (! rbRow.rbId) {
         var courseName = rbRow.courseName;
-        console.log("Missing rbId for " + courseName);
+        logMe("Missing rbId for " + courseName);
         
         // if not found: create doc
         // TODO move this into createReportbook stub
         var rbFolderId = "1ixgKE3RJ_XRR_9Fu2mMsLNuz-wj-VpbT";
         
         var rbTitle = rbRow["Reportbook Title"];
-        if (! fileExists(rbTitle, rbFolderId) ) {
+        var existingFileId = fileExists(rbTitle, rbFolderId);
+        if (! existingFileId ) {
+          logMe('Duplicating template ' + top.FILES.SUBY00 + ' to ' + rbTitle);
           var newRbId = copyFile(top.FILES.SUBY00, rbFolderId, rbTitle);
-          var email       = rbRow["ownerEmail"]
-          var teacherName = rbRow["ownerName"];
-          var subjectName = rbRow["Subject Name in Report"];
-          var reportPageFooter = rbRow["Report page footer"];
+        } else {
+          logMe('Reportbook file already exist for ' + rbTitle);
+          newRbId = existingFileId;
+        }
+        var email       = rbRow["ownerEmail"]
+        var teacherName = rbRow["ownerName"];
+        var subjectName = rbRow["Subject Name in Report"];
+        var reportPageFooter = rbRow["Report page footer"];
+        
+        if (newRbId && newRbId.length > 10) {
+          rbRows[row]["rbId"] = newRbId;
           
-          if (newRbId && newRbId.length > 10) {
-            rbRows[row]["rbId"] = newRbId;
-            
-            // update tracker row with rbId
-            rbSheet.getRange(row + 2, 1).setValue(newRbId);
-
-            // give teacher EDIT access
-            addEditor(newRbId, email);
-
-            // update subjectName & teacherName
-            updateReportbookMetadata(newRbId, subjectName, teacherName);
-            
-            var classroomPermission = havePermission(rbRow["teacherFolder"]);
-            if (classroomPermission) {
-              var alreadyLinked = fileExists(rbTitle, rbRow["teacherFolder"] );
-              if ( ! alreadyLinked ) {
-                linkFile(newRbId, rbRow["teacherFolder"]);
-              }
-            } else {
-              console.error("Permission denied for " + rbTitle);
+          // update tracker row with rbId
+          rbSheet.getRange(row + 2, 1).setValue(newRbId);
+          
+          // give teacher EDIT access
+          addEditor(newRbId, email);
+          
+          // update subjectName & teacherName
+          updateReportbookMetadata(newRbId, subjectName, teacherName);
+          
+          var classroomPermission = havePermission(rbRow["teacherFolder"]);
+          if (classroomPermission) {
+            var alreadyLinked = fileExists(rbTitle, rbRow["teacherFolder"] );
+            if ( ! alreadyLinked ) {
+              linkFile(newRbId, rbRow["teacherFolder"]);
             }
+          } else {
+            logMe("Cannot copy Reportbook to teacher folder. Classroom not shared? " + rbTitle);
           }
-        }  
+        }
       }
     }
   }
@@ -758,66 +763,3 @@ function getCoursesFromClassroom(teacherId) {
   console.log("Live courses: " + courses.length + ", archived courses: " + archivedCourses.length);
   return [courses, archivedCourses];
 }
-
-//function getStudentsFromClassroom() {
-//  // loop through reportbooks
-//  // grab students (first, last, email)
-//  // push to rbId's OVERVIEW tab
-//}
-
-
-/*
-
-{
-  "courses": [
-    {
-      "id": "27744697001",
-      "name": "Y2022 Khmer Beginner 1 JS",
-      "section": "P5&6",
-      "descriptionHeading": "Y2022 Khmer Beginner 1 JS P5&6",
-      "room": "S30/31",
-      "ownerId": "113890735713045680299",
-      "creationTime": "2019-01-30T07:33:16.272Z",
-      "updateTime": "2019-01-30T07:33:15.520Z",
-      "enrollmentCode": "9rna5yw",
-      "courseState": "ACTIVE",
-      "alternateLink": "https://classroom.google.com/c/Mjc3NDQ2OTcwMDFa",
-      "teacherGroupEmail": "Y2022_Khmer_Beginner_1_JS_P5_6_teachers_ad81dfa8@hope.edu.kh",
-      "courseGroupEmail": "Y2022_Khmer_Beginner_1_JS_P5_6_af544b0e@hope.edu.kh",
-      "teacherFolder": {
-        "id": "0B3tviumg6TpHfmdWaG9HTEliaS15TFM2SUpKX2pFV0VsVTc1VU9UeDd4bnFPVGppalFYNzg",
-        "title": "Y2022 Khmer Beginner 1 JS P5&6",
-        "alternateLink": "https://drive.google.com/drive/folders/0B3tviumg6TpHfmdWaG9HTEliaS15TFM2SUpKX2pFV0VsVTc1VU9UeDd4bnFPVGppalFYNzg"
-      },
-      "guardiansEnabled": false,
-      "calendarId": "hope.edu.kh_classroom7e5dfb32@group.calendar.google.com"
-    },
-    {
-      "id": "27699708831",
-      "name": "Y2024 English MPk",
-      "section": "Year 7",
-      "descriptionHeading": "Y2024 English MPk Year 7",
-      "ownerId": "107127868601574680717",
-      "creationTime": "2019-01-29T04:12:29.753Z",
-      "updateTime": "2019-01-29T04:12:29.016Z",
-      "enrollmentCode": "1fbp0v",
-      "courseState": "ACTIVE",
-      "alternateLink": "https://classroom.google.com/c/Mjc2OTk3MDg4MzFa",
-      "teacherGroupEmail": "Y2024_English_MPk_Year_7_teachers_f775beee@hope.edu.kh",
-      "courseGroupEmail": "Y2024_English_MPk_Year_7_713977c1@hope.edu.kh",
-      "teacherFolder": {
-        "id": "0B7Z2bUyOQ9vHfi11YlphRWJsd0RZU0JtWFk0cGlsVFc0bGdBdjdzcGZUakpqaDRZVDFJMG8",
-        "title": "Y2024 English MPk Year 7",
-        "alternateLink": "https://drive.google.com/drive/folders/0B7Z2bUyOQ9vHfi11YlphRWJsd0RZU0JtWFk0cGlsVFc0bGdBdjdzcGZUakpqaDRZVDFJMG8"
-      },
-      "guardiansEnabled": false,
-      "calendarId": "hope.edu.kh_classroomd29382bf@group.calendar.google.com"
-    },
-
-...
-
-  ],
-  "nextPageToken": "CioKKBImCJDJ2OmKLRIdCg5iDAjs5PywBRCAnK6tAgoLCICAgICAsuHZ7QE="
-}
-
-*/

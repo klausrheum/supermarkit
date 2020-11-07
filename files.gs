@@ -336,9 +336,9 @@ function savePDF( ss, optEmail) {
   var blob = response.getBlob().setName((outputName)+ '.pdf');
   folder.createFile(blob);
 
-  logMe("Guardian email: " + optEmail); 
-  
   if (optEmail) {
+    logMe("Guardian email: " + optEmail); 
+
     console.log("Sending email");
     var body = "Dear Parents,\nPlease find attached your child's report. Please contact the subject teacher if you have subject-specific questions.\n\nWarm regards,\nSecondary Principal.";
     

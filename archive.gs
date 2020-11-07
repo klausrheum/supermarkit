@@ -83,23 +83,3 @@ function importStudents() {
   // createStudentRB(lily, "Y07"); 
 }
 
-// unfinished - save for Milestone 2
-function getStudentsFromRB() {
-
-  var raw_students = SpreadsheetApp.openById(rbTrackerId)
-  .getSheetByName("Students")
-  .getDataRange().getValues();
-  //Logger.log(raw_ids);
-  
-  var clean_ids = [];
-  for (var i in raw_ids) {
-    var this_id = raw_ids[i][0];
-    //Logger.log(this_id);
-    if (this_id.length > 2) {
-      //Logger.log("Clean");
-      clean_ids.push(this_id);
-    }
-  }
-  //Logger.log(clean_ids);
-  return clean_ids;
-}

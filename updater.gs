@@ -6,7 +6,7 @@
 
 
 function updateReportbooks() {
-  var makeChanges = false; // if false, just log mismatch
+  var makeChanges = true; // if false, just log mismatch
   
   logMe("START: Pre-check Reportbooks");
   
@@ -15,10 +15,11 @@ function updateReportbooks() {
   for (var row = 0; row < rbRows.length; row++) {
     var rbRow = rbRows[row];
     var id = rbRow.rbId;
+    var sync = rbRow.Sync;
     //var geo2019sl = "1HV01YukUG42Gytg1Ve6fO1veFSudRCdKsU0Q9ph6_Xw";
     
-    // skip empty rbIds
-    if (! id || id.length < 2) { 
+    // only look if 'sync' checked, skip empty rbIds
+    if (!sync || ! id || id.length < 2) { 
       continue;
     }
     
@@ -71,7 +72,7 @@ function updateReportbooks() {
     //      =iferror(index(Grades!$D$7:$Y$46, match($B$4,Grades!$D$7:$D$46,0),22),"")
     //     .chartType(scatter)
     //     .trendLines(false)
-    
+  
     Utilities.sleep(1000);
   }
 }
@@ -367,27 +368,77 @@ function test_updatePortfolios() {
   // convert the attributes table to full sentences
   var testEmail;
   testEmail = "bobby.tables@students.hope.edu.kh";
-  testEmail = "johannes.christensen@students.hope.edu.kh";
-  testEmail = "tom.kershaw@students.hope.edu.kh";
+  //testEmail = "johannes.christensen@students.hope.edu.kh";
+  //testEmail = "tom.kershaw@students.hope.edu.kh";
   var student = getStudentByEmail(testEmail);
   var pf = SpreadsheetApp.openById(student.fileid);
   updatePortfolioMergeAndWrapExtraCurricular(pf);
 }
 
+function updateSelectedPortfoliosFormulas() {
+  var students = getStudents();  
+  var selectedStudentEmails = getEmailsToUpdate();
+  
+  var formulas = [
+    {
+      // update introduction label
+      "sheet": "Pastoral", 
+      "cell": "B3", 
+      "range": "", 
+      "formula": '=if(len(B4)>1, "INDIVIDUAL REPORT FOR", "")',
+      // TODO "r1c1": false
+    },
+    {
+      // update Pastoral Comment label
+      "sheet": "Pastoral", 
+      "cell": "B6", 
+      "range": "", 
+      "formula": '=if(istext(B7), "Pastoral Comment", "")',
+      // TODO "r1c1": false;
+    },
+    {
+      // update Extra-Curricular label
+      "sheet": "Pastoral", 
+      "cell": "B11", 
+      "range": "", 
+      "formula": '=if(istext(B12), "Extra curricular activities", "")',
+      // TODO "r1c1": false;
+    },
+    {
+      // update Attendance label
+      "sheet": "Pastoral",
+      "cell": "B26",
+      "range": "",
+      "formula": '=if(isblank(C26), "", "Attendance:")',
+    },
+  ];
+    logMe('START: Updating Pastoral formulas');
+      
+  for (var s = 0; s < top.students.length; s++) {
+    //if (s >= 5) break; // already limited by 🗹
+    
+    var student = students[s];
+    if (selectedStudentEmails.indexOf(student.email) > -1) {
+      var pf = SpreadsheetApp.openById(student.fileid);
+      logMe('Updating Pastoral formulas for ' + student.fullname);
+      updateFormulas(pf, formulas);
+    }
+  }  
+    logMe('END: Updating Pastoral formulas');
 
+}
 
 function updateAllPortfolios() {
-  
   var students = getStudents();
   for (var s = 0; s < students.length; s++) {
-    // if (s > 3) break;
+    if (s > 3) break;
     
     var student = students[s];
     logMe("UPDATE: Tidying Portfolio for " + student.fullname); 
     var pf = SpreadsheetApp.openById(student.fileid);
     
     // updatePortfolioAttributes(pf);
-    updatePortfolioMergeAndWrapExtraCurricular(pf);    
+    // updatePortfolioMergeAndWrapExtraCurricular(pf);    
   }
 }
 
@@ -434,7 +485,7 @@ function updatePortfolioAttributes(pf) {
   
 }
 
-function updatePortfolioFormulas() {
+function updatePortfoliosSheetFormulas() {
   
   var formulas = [
     {
