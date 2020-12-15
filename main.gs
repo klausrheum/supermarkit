@@ -185,13 +185,13 @@ var klaus = {
   "email": "classroom@hope.edu.kh"
   };
 
-var testRBTRACKER = "1Q9rH_hexTkgsT07vJ80pIV0g8JgLIulxZEin0cyTLgA"; // Dec2020
+var testRBTRACKER = "1Q9rH_hexTkgsT07vJ80pIV0g8JgLIulxZEin0cyTLgA"; // Jan2020
 var testStudentEmail = "tom.kershaw@students.hope.edu.kh";
 var currSS = SpreadsheetApp.getActiveSpreadsheet();
 Logger.log(currSS);
 
 if (!currSS) {
-  Logger.log('No current spreadsheet! Will use Jun2020');
+  Logger.log('No current spreadsheet! Using testRBTRACKER');
   top.FILES.RBTRACKER = testRBTRACKER;
   Logger.log(top.FILES.RBTRACKER);
 };
@@ -258,7 +258,7 @@ function TEST_listCourses() {
 function listCourses(studentEmail) {
   // https://developers.google.com/classroom/reference/rest/v1/courses.students/list?apix_params=%7B%22courseId%22%3A%2216052292479%22%2C%22fields%22%3A%22students(userId%2Cprofile.name.fullName%2Cprofile.name.givenName%2Cprofile.name.familyName%2Cprofile.emailAddress)%22%7D
   var optionalArgs = {
-    pageSize: 100,
+    pageSize: 200,
     courseStates: "ACTIVE",
     studentId: studentEmail,
     fields: "courses(id,name,courseState,guardiansEnabled,ownerId,alternateLink)",
@@ -283,14 +283,14 @@ function listCourses(studentEmail) {
 
 
 function TEST_listCourseWorks() {
-  var courseId = "16059575101";
+  var courseId = "41100834608";
   var courseworks = listCourseWorks(courseId);
   Logger.log (courseworks);
 }
 
 function listCourseWorks(courseId) {
   var optionalArgs = {
-    pageSize: 100,
+    pageSize: 200,
     orderBy: "dueDate asc",
     fields: "courseWork(id,courseId,title,dueDate,maxPoints,state,workType,alternateLink)"
   }
@@ -301,9 +301,11 @@ function listCourseWorks(courseId) {
   var token = response.nextPageToken;
   
   if (token) {
-    var message = "listCourseWorks ran to more than one page!";
+    var message = "listCourseWorks ran to more than 100 assignments!";
+    logMe(message);
     sendTheDeveloperTheError( message );
     console.error ( message );
+    
   }
   
   return courseWorks;
@@ -330,15 +332,12 @@ function getEmailIds(courseId) {
 }
 
 function TEST_importGrades() {
-  // Y2022 CS10 JKw
-  var rbId = "1OK5U2yySrs3zZmkf-yAi4AuLtc4D76g57KK8sDPpqgU";  
-  var courseId = "16052527003";
+  // Y2021 ENG12HL RB
+  var rbId = "1_wsivTraEAn-mgjFv_SYOXK4dGtES0mhuhLnl2pE0ic";  // column A  
+  var courseId = "41100834608";  // column E
   
-//  // Y2025 ICT 
-//  var rbId = "1BijeGY49S0amD3u-eePjz8iWBwH1sEc7QE_yADzVzgQ";  
-//  var courseId = "16052292479";
-  top.META.SEM = "Jun2020";
-  top.FILES.RBTRACKER = "1Z4tc9AsmpuRgZ88puLCANMrr7hgvUTtMrlYenRcEZWg";
+  top.META.SEM = "Dec2020";
+  top.FILES.RBTRACKER = "1Q9rH_hexTkgsT07vJ80pIV0g8JgLIulxZEin0cyTLgA";
   importGrades(rbId, courseId);
 }
 
@@ -349,7 +348,7 @@ function importGrades(rbId, courseId) {
   var dueMonth = top.META.SEM.slice(0,-4);
   var dueMonths;
   var message = "importGrades for 6 months up to " + dueMonth + " " + dueYear;
-  logMe(message);
+  logMe(message + " " + dueMonth);
   
   if (dueMonth === "Jun") {
     dueMonths = [1, 2, 3, 4, 5, 6];
@@ -363,14 +362,17 @@ function importGrades(rbId, courseId) {
   }
   
   var courseWorks = listCourseWorks(courseId);
+  Logger.log('=== courseWorks === (' + courseWorks.length + ')\n' + courseWorks);
+ 
   var filteredCourseWorks = filterCourseWorks(courseWorks, titleRegex, dueYear, dueMonths);  
+  Logger.log('=== filteredCourseWorks === (' + filteredCourseWorks.length + ')\n' + filteredCourseWorks);
   
   var emailIds = getEmailIds(courseId);
   
   var sheet = SpreadsheetApp.openById(rbId).getSheetByName(top.SHEETS.GRADES);
   var emailStartRow = 7;
   var studentEmails = sheet.getRange("C" + emailStartRow + ":C").getValues();
-  // Logger.log (studentEmails);
+  Logger.log (studentEmails);
 
   var startCol = 8;
   
@@ -596,6 +598,13 @@ function listStudents(courseId) {
 }
 
 /*
+
+===================================================================
+
+  Useful information on format of data returned from API requests 
+
+===================================================================
+
 fields:students(userId,profile.name.fullName,profile.name.givenName,profile.name.familyName,profile.emailAddress)
 
 {
@@ -606,11 +615,11 @@ fields:students(userId,profile.name.fullName,profile.name.givenName,profile.name
       "profile": {
         "id": "109441503280302149020",
         "name": {
-          "givenName": "Tanyaradzwa",
-          "familyName": "Hungwe",
-          "fullName": "Tanyaradzwa Hungwe"
+          "givenName": "*****",
+          "familyName": "*****",
+          "fullName": "***** *****"
         },
-        "emailAddress": "tanyaradzwa.hungwe@students.hope.edu.kh",
+        "emailAddress": "*****.*****@students.hope.edu.kh",
         "photoUrl": "//lh3.googleusercontent.com/a-/AAuE7mC-d4wzYIvLdp1VbjbqDvuEMFmBjWkvjI1GggVG"
       }
     },
@@ -850,7 +859,7 @@ GET https://classroom.googleapis.com/v1/
 courses/16059575101/
 courseWork/32765561263/studentSubmissions
 
-?userId=kyler.hester%40students.hope.edu.kh
+?userId=*****.******%40students.hope.edu.kh
 &fields=nextPageToken%2CstudentSubmissions(alternateLink%2CassignedGrade%2Cstate)
 &key={YOUR_API_KEY}
 

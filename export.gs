@@ -66,15 +66,20 @@ function exportAllRBs() {
 function TEST_exportStudentsFromRB() {
   var meta = {'tag': arguments.callee.name, "dest": "L"};
   
-  var rbIds = getRbIds();
-  var aaa_testerbook = "1cLCGk3RBa-Y5zqf7CT8GEwDRD-GtJBOka7_41NUsi5U";
-  var rbIds = [aaa_testerbook];
+  // var rbIds = getRbIds();
+  
+  var rbIds = [
+    '1BvuBASeGS2rtepnrssuPLePFYAO-N3pJ_1BdyM0h5Y4', // Dec2020 SR Y10 Khmer 
+    '1vAqq97PYWSjoDcJS5k_ksylLvIi-uBStgjOSeoMg4YU', // Dec2020 SR Y10 CP
+    '1GDFrAdYX8Tlo1vMnOr3YCCbUyIwAzQaZCSK-ut4lsBQ', // Dec2020 SR Y10 Geography
+  ];
   
   var rbId = rbIds[0];
   var rbss = SpreadsheetApp.openById(rbId);
   logIt("Exporting: " + rbId, meta);
   var studentsToUpdate = [
-    "bobby.tables@students.hope.edu.kh"
+    //"bobby.tables@students.hope.edu.kh",
+    "heewon.kim@student.hope.edu.kh",
     ];
   
   exportStudentsFromRB(rbss, studentsToUpdate);
@@ -501,7 +506,8 @@ function getPortfolioFile(student) {
   }
   catch(e) {
     logMe(
-      "[" + subYear + "] PORTFOLIO MISSING? " + student.email + ", error: " + e, 'error');           
+      "PORTFOLIO MISSING? " + student.email + ", error: " + e, 'error' + ' fileId: ' + student.fileid
+    );           
   }
   return portfolioFile;
 }
