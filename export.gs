@@ -295,7 +295,7 @@ function exportStudentsFromRB(rbss, studentsToUpdate) {
             updateValues(portfolioSheet, "F6:6", ["Title"], [""]);
             
             // merge & wrap footer area, add text
-            var footer = "* Assessments marked * were completed after school closure. Given the challenges associated with distance learning and assessing, teachers are unable to validate whether missing or uncharacteristic assessment items are a consequence of technical challenges or lack of student application.";
+            var footer = "";
             var a1Notation = top.RANGES.REPORTFOOTER;
             addFooter(portfolioSheet, a1Notation, footer);
             
