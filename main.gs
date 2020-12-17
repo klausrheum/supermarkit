@@ -51,7 +51,8 @@ var top = {
   // DELETE? "aaa": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y", // test reportbook
 
   META: {
-    "SEM": ""  // eg top.META.SEM = "Dec2019" select a RB from list in FILES
+    "SEM": "",  // eg top.META.SEM = "Dec2019" select a RB from list in FILES
+    "REPORTPERIOD": "2020-21\nSemester 1"
   },
   
   FILES: {
@@ -71,7 +72,10 @@ var top = {
     "SUBY00": "17ZJgVhi_SQeoJffFmjdcOFsMp0FRiZVIkjulnmQXJBw",
     
     // a dummy reportbook for testing
-    "AAA": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y"
+    "AAA": "1CGQAR4QafGnC_LarUQqECY2Fy9Dv8jBkIsNlwUyuS3Y",
+    
+    // the folder name for the current PDF export run
+    "FOLDERNAME": "",
   },
   
   SHEETS: {
@@ -160,6 +164,8 @@ var top = {
     ADMINATTRIBUTES:      "B13:B21",
     PASTORALFOOTER:       "B29:H29",
     REPORTFOOTER:         "B28:R28",
+    REPORTPERIOD:         "G4",
+    YEARLEVEL:            "H4"
   }
 };
 

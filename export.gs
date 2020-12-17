@@ -547,6 +547,17 @@ function grabPortfolioTabsAndGrades(student) {
   }
 }
 
+function sortSubjectsAlphabetically(student) {
+  var portfolioFile = getPortfolioFile(student);
+  if (portfolioFile) {
+    orderTabs(portfolioFile);
+  }
+  // Move Admin and Pastoral back to the front
+  portfolioFile.setActiveSheet(portfolioFile.getSheetByName("Pastoral"));
+  portfolioFile.moveActiveSheet(1);
+  portfolioFile.setActiveSheet(portfolioFile.getSheetByName("Admin"));
+  portfolioFile.moveActiveSheet(1);
+}
 
 function copyPastoralToAdmin() {  
   
@@ -766,7 +777,9 @@ function backupAllPastoralAdmin() {
       backupPastoralAdmin(student);
       pushExtraCurricularToPortfolio(student);
       setPastoralPageFooter(student); // NEW
+      setReportPeriodAndSchoolYear(student);
       grabPortfolioTabsAndGrades(student);
+      sortSubjectsAlphabetically(student);
     }
   }  
 }
@@ -814,6 +827,25 @@ function setPastoralPageFooter(student) {
   var a1Notation = top.RANGES.PASTORALFOOTER; // "B29:H29";
   
   addFooter(pastoralSheet, a1Notation, footer);
+}
+
+function setReportPeriodAndSchoolYear(student) {
+  yearLevel = student.year.slice(-2);
+  yearLevelInteger = yearLevel - 0
+  
+  var pf = SpreadsheetApp.openById(student.fileid);
+  var pfName = pf.getName();
+
+  var pastoralSheet = pf.getSheetByName(top.SHEETS.PASTORAL);
+  
+  pastoralSheet.getRange(top.RANGES.REPORTPERIOD)          
+  .setHorizontalAlignment("center")
+  .setValue(top.META.REPORTPERIOD)
+  .setFontSize(14);
+  
+  pastoralSheet.getRange(top.RANGES.YEARLEVEL)          
+  .setHorizontalAlignment("center")
+  .setValue("Year " + yearLevelInteger);
 }
 
 function test_backupPastoralAdmin() {

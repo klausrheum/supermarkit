@@ -172,8 +172,6 @@ function keepKillSheets(ss, keepPatterns, killPatterns, forReal) {
 }
 
 
-
-
 /**
  * Generate PDFs from Portfolios 
  * @param {string} rbTrackerId
@@ -185,6 +183,10 @@ function generateSelectedPortfolioPDFs(sendEmails) {
   }
 
   logMe("START generateAllPortfolioPDFs()", 'warn');
+  var d = new Date;
+  var dateString = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  var timeString = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2)
+  top.FILES.FOLDERNAME = "PDF " + dateString + " " + timeString;
   
   var students = getStudents();  
   var selectedStudentEmails = getEmailsToUpdate();  
@@ -277,21 +279,32 @@ function createPdf(ss, guardianEmail, hideBeforePatterns, showAfterPatterns) {
   });
 }
 
+function findOrCreatePDFFolder( ss ) {
+  var parents = DriveApp.getFileById(ss.getId()).getParents();
+  var parentFolder = parents.next();
+  var subFolders = parentFolder.getFolders();
+  
+  while (subFolders.hasNext()) {
+    var folder = subFolders.next();
+    
+    if (folder.getName() === top.FILES.FOLDERNAME) {
+      return folder;
+    }
+  }
+  
+  var newFolder = parentFolder.createFolder(top.FILES.FOLDERNAME);
+  logMe("=HYPERLINK(\"" + newFolder.getUrl() + "\", \"" + "Created new folder: " + top.FILES.FOLDERNAME + "\")");
+  return newFolder;
+}
+
 
 function savePDF( ss, optEmail) {
+  var folder = findOrCreatePDFFolder( ss );
+  
   var outputName = ss.getName(); 
   logMe("Exporting PDF " + outputName);
-  
-  // Get folder containing spreadsheet, for later export
-  var parents = DriveApp.getFileById(ss.getId()).getParents();
-  if (parents.hasNext()) {
-    var folder = parents.next();
-  }
-  else {
-    folder = DriveApp.getRootFolder();
-  }
 
-  var url_base = ss.getUrl().replace(/edit$/,'');
+  var url_base = "https://docs.google.com/spreadsheets/d/" + ss.getId() + "/";
 
   //additional parameters for exporting the sheet as a pdf
   var url_ext = 'export?exportFormat=pdf&format=pdf'   //export as pdf
