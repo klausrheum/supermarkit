@@ -553,9 +553,12 @@ function sortSubjectsAlphabetically(student) {
     orderTabs(portfolioFile);
   }
   // Move Admin and Pastoral back to the front
-  portfolioFile.setActiveSheet(portfolioFile.getSheetByName("Pastoral"));
-  portfolioFile.moveActiveSheet(1);
-  portfolioFile.setActiveSheet(portfolioFile.getSheetByName("Admin"));
+  pastoralSheet = portfolioFile.getSheetByName(top.SHEETS.PASTORAL)
+  if (pastoralSheet != null) {
+    portfolioFile.setActiveSheet(pastoralSheet);
+    portfolioFile.moveActiveSheet(1);
+  }
+  portfolioFile.setActiveSheet(portfolioFile.getSheetByName(top.SHEETS.ADMIN));
   portfolioFile.moveActiveSheet(1);
 }
 
@@ -837,6 +840,11 @@ function setReportPeriodAndSchoolYear(student) {
   var pfName = pf.getName();
 
   var pastoralSheet = pf.getSheetByName(top.SHEETS.PASTORAL);
+  if (pastoralSheet == null) {
+    // Guard clause in the unlikely event student has no pastoral page - should be very rare
+    logMe('SKIPPING ' + student.fullname + ' - no Pastoral page', 'warn');
+    return false
+  };
   
   pastoralSheet.getRange(top.RANGES.REPORTPERIOD)          
   .setHorizontalAlignment("center")
@@ -846,6 +854,9 @@ function setReportPeriodAndSchoolYear(student) {
   pastoralSheet.getRange(top.RANGES.YEARLEVEL)          
   .setHorizontalAlignment("center")
   .setValue("Year " + yearLevelInteger);
+  
+  // And set pastoral teacher overflow in case there's 3 teachers and they don't fit
+  pastoralSheet.getRange("F8").setWrapStrategy(SpreadsheetApp.WrapStrategy.OVERFLOW);
 }
 
 function test_backupPastoralAdmin() {

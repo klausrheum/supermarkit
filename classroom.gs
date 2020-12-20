@@ -257,6 +257,11 @@ function TEST_addReportPageFooter() {
 }
 
 function addFooter(sheet, a1Notation, text) {
+  if (sheet == null) {
+    // Guard clause in the unlikely event student has no pastoral page - should be very rare
+    logMe('SKIPPING - no Pastoral page');
+    return false
+  };
   Logger.log(sheet.getRange(a1Notation).getValue());
   
   sheet.getRange(a1Notation)
